@@ -13,7 +13,7 @@ export default function Index() {
               strokeLinecap="round"
               strokeLinejoin="round"
               className="h-5 w-5 mr-2 flex-shrink-0"
-              style={{ display: 'inline-block', verticalAlign: 'middle' }}
+              style={{ display: "inline-block", verticalAlign: "middle" }}
             >
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
@@ -23,11 +23,10 @@ export default function Index() {
             Work Smarter, Together. Effortless Collaboration.
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Tag your notes, collaborate instantly, and generate on-demand AI summaries. No clutter. Just fast, secure, and focused writing.
+            Tag your notes, collaborate instantly, and generate on-demand AI
+            summaries. No clutter. Just fast, secure, and focused writing.
           </p>
-          <button
-            className="bg-black hover:bg-gray-700 text-white font-semibold px-8 py-3 text-lg rounded-lg transition-colors duration-200 cursor-pointer"
-          >
+          <button className="bg-black hover:bg-gray-700 text-white font-semibold px-8 py-3 text-lg rounded-lg transition-colors duration-200 cursor-pointer">
             Start Now
           </button>
         </div>
