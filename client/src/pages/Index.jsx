@@ -1,6 +1,24 @@
 import { signInWithGoogle } from "../firebase";
+import { useAuth } from "../AuthContext";
 
 export default function Index() {
+  const { setUser } = useAuth();
+
+  const handleSignIn = async () => {
+    try {
+      const { user, token } = await signInWithGoogle();
+      setUser({
+        name: user.displayName,
+        avatar: user.photoURL,
+        token,
+        email: user.email,
+        uid: user.uid,
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 font-[Montserrat,sans-serif] overflow-hidden">
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
@@ -30,7 +48,7 @@ export default function Index() {
           </p>
           <button
             className="bg-black hover:bg-gray-700 text-white font-semibold px-8 py-3 text-lg rounded-lg transition-colors duration-200 cursor-pointer"
-            onClick={signInWithGoogle}
+            onClick={handleSignIn}
           >
             Start Now
           </button>
