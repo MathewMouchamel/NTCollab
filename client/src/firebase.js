@@ -1,4 +1,6 @@
 import { initializeApp } from "firebase/app";
+// Import Auth SDKs
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 // Your web app's Firebase configuration using environment variables
 const firebaseConfig = {
@@ -14,3 +16,10 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export { app };
+
+// Reusable Google sign-in function
+export async function signInWithGoogle() {
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+  return signInWithPopup(auth, provider);
+}
