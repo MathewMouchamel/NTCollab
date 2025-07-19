@@ -1,4 +1,21 @@
+import { app } from "../firebase";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { useState } from "react";
+
 export default function Index() {
+  const [error, setError] = useState("");
+
+  const handleStartNow = async () => {
+    setError("");
+    try {
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      setError("Google sign-in failed.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 font-[Montserrat,sans-serif] overflow-hidden">
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
@@ -26,9 +43,17 @@ export default function Index() {
             Tag your notes, collaborate instantly, and generate on-demand AI
             summaries. No clutter. Just fast, secure, and focused writing.
           </p>
-          <button className="bg-black hover:bg-gray-700 text-white font-semibold px-8 py-3 text-lg rounded-lg transition-colors duration-200 cursor-pointer">
+          <button
+            className="bg-black hover:bg-gray-700 text-white font-semibold px-8 py-3 text-lg rounded-lg transition-colors duration-200 cursor-pointer"
+            onClick={handleStartNow}
+          >
             Start Now
           </button>
+          {error && (
+            <div className="mt-4 text-base text-red-600 bg-white border border-red-400 rounded p-4 max-w-md mx-auto">
+              {error}
+            </div>
+          )}
         </div>
       </div>
     </div>
