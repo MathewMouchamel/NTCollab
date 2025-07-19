@@ -1,5 +1,3 @@
-import '../styles/index.css';
-
 export default function Index() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 font-[Montserrat,sans-serif] overflow-hidden">
