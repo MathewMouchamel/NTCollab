@@ -1,7 +1,11 @@
-const express = require('express');
-const cors = require('cors');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 
 // Allow CORS from Vite default port
 app.use(cors({ origin: 'http://localhost:5173' }));
