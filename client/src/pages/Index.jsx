@@ -1,58 +1,5 @@
 import '../styles/index.css';
 
-// Error Boundary Component
-class ErrorBoundary extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error("Error Boundary caught an error:", error, errorInfo);
-    this.setState({
-      error: error,
-      errorInfo: errorInfo
-    });
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-white flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto px-6 bg-white border-4 border-black rounded-xl p-8">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-black mb-2">Something went wrong</h1>
-              <p className="text-black mb-4">
-                The application encountered an unexpected error. Please try refreshing the page.
-              </p>
-              {this.state.error && (
-                <details className="text-left text-sm text-black">
-                  <summary className="cursor-pointer font-semibold">Error Details</summary>
-                  <pre className="mt-2 text-xs overflow-auto">
-                    {this.state.error.toString()}
-                  </pre>
-                </details>
-              )}
-            </div>
-            <button 
-              onClick={() => window.location.reload()}
-              className="bg-black hover:bg-gray-700 text-white font-semibold px-8 py-3 text-lg rounded-lg"
-            >
-              Refresh Page
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
 export default function Index() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 font-[Montserrat,sans-serif] overflow-hidden">
