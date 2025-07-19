@@ -1,15 +1,8 @@
 @import "tailwindcss";
 
 body {
-  font-family: "Montserrat", "Funnel Display", "Libre Baskerville", "Caveat",
-    "Edu NSW ACT Cursive", sans-serif;
-  margin: 0;
-  padding: 0;
-}
-
-.caveat-400 {
-  font-family: "Caveat", cursive;
+  font-family: "Funnel Display", sans-serif;
   font-optical-sizing: auto;
-  font-weight: 400;
+  font-weight: 300;
   font-style: normal;
 }
