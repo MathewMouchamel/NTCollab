@@ -23,7 +23,7 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 font-[Montserrat,sans-serif] overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 caveat-400 overflow-hidden">
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh)]">
         {/* min-h-[calc(100vh-80px)] */}
         <div className="text-center min-h-[8rem] flex flex-col items-center gap-8">
