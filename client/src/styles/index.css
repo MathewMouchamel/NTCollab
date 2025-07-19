@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Basic CSS Reset and placeholder for future styles */
 body {
   margin: 0;
