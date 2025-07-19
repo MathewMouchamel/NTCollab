@@ -1,4 +1,18 @@
+import { useState } from 'react';
+
 export default function Index() {
+  const [backendResponse, setBackendResponse] = useState('');
+
+  const handleStartNow = async () => {
+    try {
+      const res = await fetch('http://localhost:3000/hello');
+      const text = await res.text();
+      setBackendResponse(text);
+    } catch (err) {
+      setBackendResponse('Error connecting to backend.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 font-[Montserrat,sans-serif] overflow-hidden">
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
@@ -27,9 +41,15 @@ export default function Index() {
           </p>
           <button
             className="bg-black hover:bg-gray-700 text-white font-semibold px-8 py-3 text-lg rounded-lg transition-colors duration-200 cursor-pointer"
+            onClick={handleStartNow}
           >
             Start Now
           </button>
+          {backendResponse && (
+            <div className="mt-4 text-base text-black bg-white border border-black rounded p-4 max-w-md mx-auto">
+              {backendResponse}
+            </div>
+          )}
         </div>
       </div>
     </div>
