@@ -1,10 +1,14 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT;
 
-// Endpoint that sends 'hellow world' to the frontend
+// Allow CORS from Vite default port
+app.use(cors({ origin: 'http://localhost:5173' }));
+
+// Endpoint that sends 'hello world' to the frontend
 app.get('/hello', (req, res) => {
-  res.send('hellow world');
+  res.send('hello world');
 });
 
 app.listen(PORT, () => {
