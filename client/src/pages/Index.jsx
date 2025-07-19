@@ -1,8 +1,10 @@
 import { signInWithGoogle } from "../firebase";
 import { useAuth } from "../AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Index() {
   const { setUser } = useAuth();
+  const navigate = useNavigate();
 
   const handleSignIn = async () => {
     try {
@@ -14,6 +16,7 @@ export default function Index() {
         email: user.email,
         uid: user.uid,
       });
+      navigate("/documents");
     } catch (err) {
       console.log(err);
     }
