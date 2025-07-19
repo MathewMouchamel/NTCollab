@@ -1,4 +1,3 @@
-import "../styles/index.css"
 export default function Index() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 font-[Montserrat,sans-serif] overflow-hidden">
@@ -20,14 +19,14 @@ export default function Index() {
             </svg>
             Collaborative Notes, Simplified
           </div>
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight max-w-[700px] mx-auto">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight max-w-[800px] mx-auto">
             Work Smarter, Together. Effortless Collaboration.
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Tag your notes, collaborate instantly, and generate on-demand AI summaries to capture the big picture. No clutter. Just fast, secure, and focused writing.
+            Tag your notes, collaborate instantly, and generate on-demand AI summaries. No clutter. Just fast, secure, and focused writing.
           </p>
           <button
-            className="bg-black hover:bg-gray-700 text-white font-semibold px-8 py-3 text-lg rounded-lg transition-colors duration-200"
+            className="bg-black hover:bg-gray-700 text-white font-semibold px-8 py-3 text-lg rounded-lg transition-colors duration-200 cursor-pointer"
           >
             Start Now
           </button>
