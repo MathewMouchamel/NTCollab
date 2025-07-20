@@ -16,13 +16,35 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export { app };
+const auth = getAuth(app); // Define auth once at the top
+export { auth }; // Export auth so you can use it elsewhere
 
 // Reusable Google sign-in function
-export async function signInWithGoogle() {
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-  const result = await signInWithPopup(auth, provider);
-  const user = result.user;
-  const token = await user.getIdToken();
-  return { user, token };
-}
+export const signInWithGoogle = async () => {
+  try {
+    // Check if user is already signed in - use the existing auth instance
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      // User is already signed in, get their token
+      const token = await currentUser.getIdToken();
+      return {
+        user: currentUser,
+        token,
+      };
+    }
+
+    // User is not signed in, proceed with Google sign-in
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const token = await result.user.getIdToken();
+
+    return {
+      user: result.user,
+      token,
+    };
+  } catch (error) {
+    console.error("Error during sign in:", error);
+    throw error;
+  }
+};
