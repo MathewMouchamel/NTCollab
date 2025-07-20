@@ -25,22 +25,16 @@ export const signInWithGoogle = async () => {
     // Check if user is already signed in - use the existing auth instance
     const currentUser = auth.currentUser;
 
-    if (currentUser) {
-      // User is already signed in, get their token
-      const token = await currentUser.getIdToken();
-      return {
-        user: currentUser,
-        token,
-      };
+    // User is not signed in, proceed with Google sign-in
+    if (!currentUser) {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      currentUser = result.currentUser;
     }
 
-    // User is not signed in, proceed with Google sign-in
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    const token = await result.user.getIdToken();
-
+    const token = await currentUser.getIdToken();
     return {
-      user: result.user,
+      user: currentUser,
       token,
     };
   } catch (error) {
