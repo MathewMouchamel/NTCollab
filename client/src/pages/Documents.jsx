@@ -5,10 +5,12 @@ export default function Documents() {
   const documents = [];
 
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col items-center py-12 px-4">
-      <h1 className="text-4xl font-bold mb-10 tracking-tight">Documents</h1>
+    <div className="min-h-screen bg-white text-black flex flex-col py-12 px-4">
+      <h1 className="text-4xl font-bold tracking-tight mt-10 mx-auto">
+        Documents
+      </h1>
       {documents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center mt-20">
+        <div className="flex-1 flex flex-col items-center justify-center">
           {/* Fun black/white SVG (document with a smiley face) */}
           <svg
             width="120"
@@ -44,7 +46,7 @@ export default function Documents() {
             Click below to create your first one.
           </p>
           <button
-            className="flex items-center justify-center w-16 h-16 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg"
+            className="flex items-center justify-center w-16 h-16 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg cursor-pointer"
             aria-label="Add new document"
           >
             <svg
@@ -64,11 +66,11 @@ export default function Documents() {
           </button>
         </div>
       ) : (
-        <div className="w-full max-w-2xl flex flex-col gap-6">
+        <div className="flex-1 w-full max-w-2xl flex flex-col gap-6 items-center justify-center">
           {/* Map over documents here in the future */}
           {/* Example: documents.map(doc => <DocumentCard key={doc.id} ... />) */}
           <button
-            className="flex items-center justify-center w-16 h-16 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg self-center mt-8"
+            className="flex items-center justify-center w-16 h-16 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg"
             aria-label="Add new document"
           >
             <svg
