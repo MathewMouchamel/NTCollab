@@ -1,6 +1,7 @@
 import { signInWithGoogle } from "../firebase";
 import { useAuth } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function Index() {
   const { setUser } = useAuth();
@@ -21,6 +22,13 @@ export default function Index() {
       console.log(err);
     }
   };
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 caveat-400 overflow-hidden">
