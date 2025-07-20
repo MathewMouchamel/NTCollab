@@ -17,7 +17,7 @@ export default function Index() {
         email: user.email,
         uid: user.uid,
       });
-      navigate("/documents");
+      navigate("/notes");
     } catch (err) {
       console.log(err);
     }

@@ -1,17 +1,15 @@
 import React from "react";
 
-export default function Documents() {
-  // Placeholder for documents array
-  const documents = [];
+export default function Notes() {
+  // Placeholder for notes array
+  const notes = [];
 
   return (
     <div className="min-h-screen bg-white text-black flex flex-col py-12 px-4">
-      <h1 className="text-4xl font-bold tracking-tight mt-10 mx-auto">
-        Documents
-      </h1>
-      {documents.length === 0 ? (
+      <h1 className="text-4xl font-bold tracking-tight mt-10 mx-auto">Notes</h1>
+      {notes.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center">
-          {/* Fun black/white SVG (document with a smiley face) */}
+          {/* Fun black/white SVG (note with a smiley face) */}
           <svg
             width="120"
             height="120"
@@ -41,13 +39,13 @@ export default function Documents() {
             />
           </svg>
           <p className="text-xl font-semibold mb-6 text-center">
-            No documents yet!
+            No notes yet!
             <br />
             Click below to create your first one.
           </p>
           <button
             className="flex items-center justify-center w-16 h-16 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg cursor-pointer"
-            aria-label="Add new document"
+            aria-label="Add new note"
           >
             <svg
               width="32"
@@ -67,11 +65,11 @@ export default function Documents() {
         </div>
       ) : (
         <div className="flex-1 w-full max-w-2xl flex flex-col gap-6 items-center justify-center">
-          {/* Map over documents here in the future */}
-          {/* Example: documents.map(doc => <DocumentCard key={doc.id} ... />) */}
+          {/* Map over notes here in the future */}
+          {/* Example: notes.map(note => <NoteCard key={note.id} ... />) */}
           <button
             className="flex items-center justify-center w-16 h-16 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg"
-            aria-label="Add new document"
+            aria-label="Add new note"
           >
             <svg
               width="32"
