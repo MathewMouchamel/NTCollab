@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { verifyFirebaseToken } from "./verifyFirebaseToken.js";
 
 dotenv.config();
 
@@ -11,7 +12,7 @@ const PORT = process.env.PORT;
 app.use(cors({ origin: "http://localhost:5173" }));
 
 // Endpoint that sends 'hello world' to the frontend
-app.get("/hello", (req, res) => {
+app.get("/hello", verifyFirebaseToken, (req, res) => {
   res.send("hello world");
 });
 
