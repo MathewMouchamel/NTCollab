@@ -11,9 +11,17 @@ const PORT = process.env.PORT;
 // Allow CORS from Vite default port
 app.use(cors({ origin: "http://localhost:5173" }));
 
-// Endpoint that sends 'hello world' to the frontend
+// Endpoint that sends user info if authenticated, or 401 if not
 app.get("/hello", verifyFirebaseToken, (req, res) => {
-  res.send("hello world");
+  if (!req.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const { uid, email, picture } = req.user;
+  res.json({
+    uid,
+    email,
+    avatar: picture || null,
+  });
 });
 
 app.listen(PORT, () => {
