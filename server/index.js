@@ -42,7 +42,7 @@ router.get("/", verifyFirebaseToken, async (req, res) => {
 });
 
 // GET /api/notes/:id (read note, public/private logic)
-router.get("/:id", async (req, res) => {
+router.get("/:id", verifyFirebaseToken, async (req, res) => {
   const { id } = req.params;
   const { data, error } = await supabase
     .from("notes")
