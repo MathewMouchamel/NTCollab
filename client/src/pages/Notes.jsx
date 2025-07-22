@@ -5,7 +5,6 @@ import { signInWithGoogle } from "../firebase";
 export default function Notes() {
   const { user, setUser } = useAuth();
   const [protectedData, setProtectedData] = useState(null);
-  const [error, setError] = useState(null);
   const [showContent, setShowContent] = useState(false);
   // Placeholder for notes array
   const notes = [];
@@ -16,18 +15,16 @@ export default function Notes() {
   }, []);
 
   const handlePlusClick = async () => {
-    setError(null);
     setProtectedData(null);
     let token = user && user.token ? user.token : undefined;
     try {
       const res = await fetch("http://localhost:3000/protected-test", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error("Unauthorized or error fetching data");
       const data = await res.json();
       setProtectedData(data);
     } catch (err) {
-      setError(err.message);
+      console.log(err);
     }
   };
 
@@ -42,7 +39,7 @@ export default function Notes() {
         uid: user.uid,
       });
     } catch (err) {
-      setError("Sign in failed");
+      console.log(err);
     }
   };
 
@@ -66,9 +63,6 @@ export default function Notes() {
           >
             Sign in with Google
           </button>
-          {error && (
-            <div className="mt-4 text-red-600 font-semibold">{error}</div>
-          )}
         </div>
       )}
       {user && (
@@ -137,9 +131,6 @@ export default function Notes() {
                   {JSON.stringify(protectedData, null, 2)}
                 </pre>
               )}
-              {error && (
-                <div className="mt-4 text-red-600 font-semibold">{error}</div>
-              )}
             </div>
           ) : (
             <div className="flex-1 w-full max-w-2xl flex flex-col gap-6 items-center justify-center">
@@ -169,9 +160,6 @@ export default function Notes() {
                 <pre className="mt-6 bg-gray-100 p-4 rounded text-left w-full max-w-md overflow-x-auto">
                   {JSON.stringify(protectedData, null, 2)}
                 </pre>
-              )}
-              {error && (
-                <div className="mt-4 text-red-600 font-semibold">{error}</div>
               )}
             </div>
           )}
