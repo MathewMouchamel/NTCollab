@@ -3,17 +3,12 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { verifyFirebaseToken } from "./verifyFirebaseToken.js";
 import { createClient } from "@supabase/supabase-js";
+import supabase from "./supabaseClient.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT;
-
-// Supabase client setup
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
