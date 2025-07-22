@@ -1,8 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
+import { useAuth } from "../AuthContext";
 
 export default function Notes() {
+  const { user } = useAuth();
+  const [protectedData, setProtectedData] = useState(null);
+  const [error, setError] = useState(null);
   // Placeholder for notes array
   const notes = [];
+
+  const handlePlusClick = async () => {
+    setError(null);
+    setProtectedData(null);
+    let token = user && user.token ? user.token : undefined;
+    try {
+      const res = await fetch("http://localhost:3000/protected-test", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error("Unauthorized or error fetching data");
+      const data = await res.json();
+      setProtectedData(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white text-black flex flex-col py-12 px-4">
@@ -46,6 +66,7 @@ export default function Notes() {
           <button
             className="flex items-center justify-center w-16 h-16 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg cursor-pointer"
             aria-label="Add new note"
+            onClick={handlePlusClick}
           >
             <svg
               width="32"
@@ -62,6 +83,14 @@ export default function Notes() {
               <line x1="8" y1="12" x2="16" y2="12" />
             </svg>
           </button>
+          {protectedData && (
+            <pre className="mt-6 bg-gray-100 p-4 rounded text-left w-full max-w-md overflow-x-auto">
+              {JSON.stringify(protectedData, null, 2)}
+            </pre>
+          )}
+          {error && (
+            <div className="mt-4 text-red-600 font-semibold">{error}</div>
+          )}
         </div>
       ) : (
         <div className="flex-1 w-full max-w-2xl flex flex-col gap-6 items-center justify-center">
@@ -70,6 +99,7 @@ export default function Notes() {
           <button
             className="flex items-center justify-center w-16 h-16 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg"
             aria-label="Add new note"
+            onClick={handlePlusClick}
           >
             <svg
               width="32"
@@ -86,6 +116,14 @@ export default function Notes() {
               <line x1="8" y1="12" x2="16" y2="12" />
             </svg>
           </button>
+          {protectedData && (
+            <pre className="mt-6 bg-gray-100 p-4 rounded text-left w-full max-w-md overflow-x-auto">
+              {JSON.stringify(protectedData, null, 2)}
+            </pre>
+          )}
+          {error && (
+            <div className="mt-4 text-red-600 font-semibold">{error}</div>
+          )}
         </div>
       )}
     </div>
