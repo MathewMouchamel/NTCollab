@@ -1,31 +1,70 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import { signInWithGoogle } from "../firebase";
+import { useNavigate } from "react-router-dom";
 
 export default function Notes() {
   const { user, setUser } = useAuth();
-  const [protectedData, setProtectedData] = useState(null);
+  const navigate = useNavigate();
+  const [notes, setNotes] = useState([]);
   const [showContent, setShowContent] = useState(false);
-  // Placeholder for notes array
-  const notes = [];
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowContent(true), 200);
     return () => clearTimeout(timer);
   }, []);
 
-  const handlePlusClick = async () => {
-    setProtectedData(null);
-    let token = user && user.token ? user.token : undefined;
-    try {
-      const res = await fetch("http://localhost:3000/protected-test", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      const data = await res.json();
-      setProtectedData(data);
-    } catch (err) {
-      console.log(err);
+  // Fetch notes when user is available
+  useEffect(() => {
+    if (user) {
+      fetchNotes();
+    } else {
+      setIsLoading(false);
     }
+  }, [user]);
+
+  const fetchNotes = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/api/notes", {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      if (response.ok) {
+        const notesData = await response.json();
+        setNotes(notesData);
+      } else {
+        console.error("Failed to fetch notes");
+      }
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateNewNote = () => {
+    navigate("/notes/new");
+  };
+
+  const handleNoteClick = (noteId) => {
+    navigate(`/notes/${noteId}`);
+  };
+
+  const getPreviewText = (content) => {
+    // Strip HTML tags and get first 100 characters
+    const textContent = content.replace(/<[^>]*>/g, "");
+    return textContent.length > 100 ? textContent.substring(0, 100) + "..." : textContent;
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   const handleSignIn = async () => {
@@ -67,10 +106,37 @@ export default function Notes() {
       )}
       {user && (
         <div className="min-h-screen bg-white text-black flex flex-col py-12 px-4">
-          <h1 className="text-4xl font-bold tracking-tight mt-10 mx-auto">
-            Notes
-          </h1>
-          {notes.length === 0 ? (
+          <div className="flex items-center justify-between max-w-4xl mx-auto w-full mb-8">
+            <h1 className="text-4xl font-bold tracking-tight">Notes</h1>
+            <button
+              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg cursor-pointer"
+              aria-label="Create new note"
+              onClick={handleCreateNewNote}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </button>
+          </div>
+
+          {isLoading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading notes...</p>
+              </div>
+            </div>
+          ) : notes.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center">
               {/* Fun black/white SVG (note with a smiley face) */}
               <svg
@@ -104,63 +170,50 @@ export default function Notes() {
               <p className="text-xl font-semibold mb-6 text-center">
                 No notes yet!
                 <br />
-                Click below to create your first one.
+                Click the + button to create your first one.
               </p>
-              <button
-                className="flex items-center justify-center w-16 h-16 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg cursor-pointer"
-                aria-label="Add new note"
-                onClick={handlePlusClick}
-              >
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="16" />
-                  <line x1="8" y1="12" x2="16" y2="12" />
-                </svg>
-              </button>
-              {protectedData && (
-                <pre className="mt-6 bg-gray-100 p-4 rounded text-left w-full max-w-md overflow-x-auto">
-                  {JSON.stringify(protectedData, null, 2)}
-                </pre>
-              )}
             </div>
           ) : (
-            <div className="flex-1 w-full max-w-2xl flex flex-col gap-6 items-center justify-center">
-              {/* Map over notes here in the future */}
-              {/* Example: notes.map(note => <NoteCard key={note.id} ... />) */}
-              <button
-                className="flex items-center justify-center w-16 h-16 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg"
-                aria-label="Add new note"
-                onClick={handlePlusClick}
-              >
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="16" />
-                  <line x1="8" y1="12" x2="16" y2="12" />
-                </svg>
-              </button>
-              {protectedData && (
-                <pre className="mt-6 bg-gray-100 p-4 rounded text-left w-full max-w-md overflow-x-auto">
-                  {JSON.stringify(protectedData, null, 2)}
-                </pre>
-              )}
+            <div className="flex-1 w-full max-w-4xl mx-auto">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {notes.map((note) => (
+                  <div
+                    key={note.id}
+                    onClick={() => handleNoteClick(note.id)}
+                    className="p-4 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow cursor-pointer bg-white"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="text-sm text-gray-500">
+                        {formatDate(note.created_at)}
+                      </div>
+                      {note.public && (
+                        <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          Public
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-gray-900 leading-relaxed">
+                      {note.content ? (
+                        getPreviewText(note.content)
+                      ) : (
+                        <em className="text-gray-400">Empty note</em>
+                      )}
+                    </div>
+                    {note.tags && note.tags.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        {note.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
