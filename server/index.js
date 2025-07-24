@@ -41,7 +41,7 @@ router.get("/", verifyFirebaseToken, async (req, res) => {
   res.json(data);
 });
 
-// GET /api/notes/:id (read note, public/private logic)
+// GET /api/notes/:id (read note, check permissions)
 router.get("/:id", verifyFirebaseToken, async (req, res) => {
   const { id } = req.params;
   const { data, error } = await supabase
@@ -50,18 +50,12 @@ router.get("/:id", verifyFirebaseToken, async (req, res) => {
     .eq("id", id)
     .single();
   if (error || !data) return res.status(404).json({ error: "Note not found" });
-  // If note is public, allow anyone; if private, only owner
-  if (!data.public) {
-    // Check auth
-    try {
-      await verifyFirebaseToken(req, res, () => {});
-    } catch {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-    if (!req.user || req.user.uid !== data.owner_uid) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
+  
+  // Check if user can access this note
+  if (!data.public && (!req.user || req.user.uid !== data.owner_uid)) {
+    return res.status(403).json({ error: "Forbidden" });
   }
+  
   res.json(data);
 });
 
@@ -82,6 +76,37 @@ router.put("/:id", verifyFirebaseToken, async (req, res) => {
   const { data, error } = await supabase
     .from("notes")
     .update({ content, tags, public: isPublic })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) return res.status(400).json({ error: error.message });
+  res.json(data);
+});
+
+// PATCH /api/notes/:id (partial update for auto-save)
+router.patch("/:id", verifyFirebaseToken, async (req, res) => {
+  const { id } = req.params;
+  const updateFields = {};
+  
+  // Only include fields that are provided in the request
+  if (req.body.content !== undefined) updateFields.content = req.body.content;
+  if (req.body.tags !== undefined) updateFields.tags = req.body.tags;
+  if (req.body.public !== undefined) updateFields.public = req.body.public;
+  
+  // Only owner can update
+  const { data: note, error: fetchError } = await supabase
+    .from("notes")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (fetchError || !note)
+    return res.status(404).json({ error: "Note not found" });
+  if (note.owner_uid !== req.user.uid)
+    return res.status(403).json({ error: "Forbidden" });
+    
+  const { data, error } = await supabase
+    .from("notes")
+    .update(updateFields)
     .eq("id", id)
     .select()
     .single();
