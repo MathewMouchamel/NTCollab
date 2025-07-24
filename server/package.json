@@ -4,7 +4,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node start-dev.js",
+    "check": "node start-dev.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.52.0",
