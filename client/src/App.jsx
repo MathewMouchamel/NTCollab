@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./AuthContext";
 import Index from "./pages/Index";
-import Notes from "./pages/Notes"; // Updated import
+import Notes from "./pages/Notes";
+import NoteEditor from "./pages/NoteEditor";
 
 function App() {
   return (
@@ -10,8 +11,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/notes" element={<Notes />} />
+          <Route path="/notes/new" element={<NoteEditor />} />
+          <Route path="/notes/:id" element={<NoteEditor />} />
         </Routes>
-        ;
       </AuthProvider>
     </BrowserRouter>
   );
