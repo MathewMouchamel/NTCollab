@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import ReactQuill from "react-quill";
@@ -161,7 +161,7 @@ export default function NoteEditor() {
     }
   };
 
-  const debouncedSave = (content) => {
+  const debouncedSave = useCallback((content) => {
     setHasUnsavedChanges(true);
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -172,12 +172,16 @@ export default function NoteEditor() {
         : { content, tags: note.tags, public: note.public }; // Use POST for new notes (full data)
       saveNote(noteToSave, id ? true : false);
     }, 1000); // Save after 1 second of inactivity
-  };
+  }, [id, note.tags, note.public]);
 
-  const handleContentChange = (content) => {
+  const handleContentChange = useCallback((content) => {
+    // Validate content to prevent empty saves
+    if (content === '<p><br></p>' || content === '') {
+      content = '';
+    }
     setNote((prev) => ({ ...prev, content }));
     debouncedSave(content);
-  };
+  }, [debouncedSave]);
 
   const handleBackToNotes = () => {
     if (hasUnsavedChanges) {
