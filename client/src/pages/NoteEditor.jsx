@@ -9,7 +9,7 @@ export default function NoteEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [note, setNote] = useState({ content: "", tags: [], public: false });
+  const [note, setNote] = useState({ title: "", content: "", tags: [], public: false });
   const [saveStatus, setSaveStatus] = useState("idle"); // idle, saving, saved, error
   const [isLoading, setIsLoading] = useState(true);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -188,6 +188,31 @@ export default function NoteEditor() {
     debouncedSave(content);
   }, [debouncedSave]);
 
+  const handleTitleChange = (e) => {
+    const newTitle = e.target.value;
+    setNote((prev) => ({ ...prev, title: newTitle }));
+    setHasUnsavedChanges(true);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      const noteToSave = currentNoteId && currentNoteId !== "new"
+        ? { title: newTitle }
+        : { ...note, title: newTitle };
+      saveNote(noteToSave, currentNoteId && currentNoteId !== "new" ? true : false);
+    }, 1000);
+  };
+  const handleTagsChange = (e) => {
+    const tags = e.target.value.split(",").map(t => t.trim()).filter(Boolean);
+    setNote((prev) => ({ ...prev, tags }));
+    setHasUnsavedChanges(true);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      const noteToSave = currentNoteId && currentNoteId !== "new"
+        ? { tags }
+        : { ...note, tags };
+      saveNote(noteToSave, currentNoteId && currentNoteId !== "new" ? true : false);
+    }, 1000);
+  };
+
   const handleBackToNotes = () => {
     if (hasUnsavedChanges) {
       const confirmLeave = window.confirm(
@@ -286,17 +311,28 @@ export default function NoteEditor() {
               </svg>
               Back to Notes
             </button>
-            {note.content && (
-              <h1 className="text-lg font-medium text-gray-900 truncate max-w-xs">
-                {note.content.replace(/<[^>]*>/g, "").substring(0, 50)}
-                {note.content.replace(/<[^>]*>/g, "").length > 50 ? "..." : ""}
-              </h1>
-            )}
           </div>
           <div className="text-sm">{getStatusDisplay()}</div>
         </div>
       </div>
-
+      {/* Title and Tags */}
+      <div className="max-w-4xl mx-auto px-4 pt-6 flex flex-col gap-4">
+        <input
+          className="text-2xl font-bold border-b-2 border-black outline-none mb-2 bg-white"
+          type="text"
+          placeholder="Title"
+          value={note.title}
+          onChange={handleTitleChange}
+          maxLength={100}
+        />
+        <input
+          className="text-base border-b border-gray-300 outline-none mb-2 bg-white"
+          type="text"
+          placeholder="Tags (comma separated)"
+          value={note.tags.join(", ")}
+          onChange={handleTagsChange}
+        />
+      </div>
       {/* Editor */}
       <div className="max-w-4xl mx-auto px-4 py-6">
         <ReactQuill
