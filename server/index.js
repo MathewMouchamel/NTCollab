@@ -19,7 +19,7 @@ const router = express.Router();
 // POST /api/notes (create note)
 router.post("/", verifyFirebaseToken, async (req, res) => {
   try {
-    const { content, tags, public: isPublic } = req.body;
+    const { content, tags, public: isPublic, title } = req.body;
     const owner_uid = req.user.uid;
     
     // Validate required fields
@@ -33,7 +33,8 @@ router.post("/", verifyFirebaseToken, async (req, res) => {
         content: content || '', 
         tags: tags || [], 
         public: isPublic || false, 
-        owner_uid 
+        owner_uid,
+        title: title || '',
       }])
       .select()
       .single();
@@ -51,7 +52,7 @@ router.post("/", verifyFirebaseToken, async (req, res) => {
 // GET /api/notes (list notes for current user)
 router.get("/", verifyFirebaseToken, async (req, res) => {
   const owner_uid = req.user.uid;
-  const { uuid } = req.query;
+  const { uuid, tag } = req.query;
   
   // If UUID is provided, search for a specific note by UUID
   if (uuid) {
@@ -69,12 +70,16 @@ router.get("/", verifyFirebaseToken, async (req, res) => {
     return res.json(data);
   }
   
-  // Otherwise, return all notes for the user
-  const { data, error } = await supabase
+  // Otherwise, return all notes for the user, optionally filtered by tag
+  let query = supabase
     .from("notes")
     .select("*")
     .eq("owner_uid", owner_uid)
-    .order("created_at", { ascending: false });
+    .order("last_opened", { ascending: false });
+  if (tag) {
+    query = query.contains("tags", [tag]);
+  }
+  const { data, error } = await query;
   if (error) return res.status(400).json({ error: error.message });
   res.json(data);
 });
@@ -105,13 +110,15 @@ router.get("/:id", verifyFirebaseToken, async (req, res) => {
     return res.status(403).json({ error: "Forbidden" });
   }
   
-  res.json(data);
+  // Update last_opened timestamp
+  await supabase.from("notes").update({ last_opened: new Date().toISOString() }).eq("id", data.id);
+  res.json({ ...data, last_opened: new Date().toISOString() });
 });
 
 // PUT /api/notes/:id (update note)
 router.put("/:id", verifyFirebaseToken, async (req, res) => {
   const { id } = req.params;
-  const { content, tags, public: isPublic } = req.body;
+  const { content, tags, public: isPublic, title } = req.body;
   
   // Check if the id looks like a UUID or is a number
   const isUUID = id.includes('-');
@@ -132,7 +139,7 @@ router.put("/:id", verifyFirebaseToken, async (req, res) => {
     
   const { data, error } = await supabase
     .from("notes")
-    .update({ content, tags, public: isPublic })
+    .update({ content, tags, public: isPublic, title })
     .eq("id", note.id) // Always use the numeric ID for updates
     .select()
     .single();
@@ -150,6 +157,7 @@ router.patch("/:id", verifyFirebaseToken, async (req, res) => {
     if (req.body.content !== undefined) updateFields.content = req.body.content;
     if (req.body.tags !== undefined) updateFields.tags = req.body.tags;
     if (req.body.public !== undefined) updateFields.public = req.body.public;
+    if (req.body.title !== undefined) updateFields.title = req.body.title;
     
     // Validate that we have something to update
     if (Object.keys(updateFields).length === 0) {

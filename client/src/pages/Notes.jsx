@@ -9,32 +9,40 @@ export default function Notes() {
   const [notes, setNotes] = useState([]);
   const [showContent, setShowContent] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedTag, setSelectedTag] = useState(null);
+  const [allTags, setAllTags] = useState([]);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowContent(true), 200);
     return () => clearTimeout(timer);
   }, []);
 
-  // Fetch notes when user is available
   useEffect(() => {
     if (user) {
       fetchNotes();
     } else {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, selectedTag]);
 
   const fetchNotes = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/notes", {
+      let url = "http://localhost:3000/api/notes";
+      if (selectedTag) {
+        url += `?tag=${encodeURIComponent(selectedTag)}`;
+      }
+      const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
       });
-
       if (response.ok) {
         const notesData = await response.json();
         setNotes(notesData);
+        // Collect all unique tags
+        const tagsSet = new Set();
+        notesData.forEach(note => (note.tags || []).forEach(tag => tagsSet.add(tag)));
+        setAllTags(Array.from(tagsSet));
       } else {
         console.error("Failed to fetch notes");
       }
@@ -130,6 +138,27 @@ export default function Notes() {
               </svg>
             </button>
           </div>
+          {/* Tag filter UI */}
+          {allTags.length > 0 && (
+            <div className="mb-6 flex flex-wrap gap-2 max-w-4xl mx-auto">
+              <span className="font-semibold mr-2">Filter by tag:</span>
+              <button
+                className={`px-3 py-1 rounded ${selectedTag === null ? 'bg-black text-white' : 'bg-gray-200 text-black'}`}
+                onClick={() => setSelectedTag(null)}
+              >
+                All
+              </button>
+              {allTags.map(tag => (
+                <button
+                  key={tag}
+                  className={`px-3 py-1 rounded ${selectedTag === tag ? 'bg-black text-white' : 'bg-gray-200 text-black'}`}
+                  onClick={() => setSelectedTag(tag)}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
 
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center">
