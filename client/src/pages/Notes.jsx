@@ -49,7 +49,9 @@ export default function Notes() {
     navigate("/notes/new");
   };
 
-  const handleNoteClick = (noteId) => {
+  const handleNoteClick = (note) => {
+    // Use UUID if available, otherwise fall back to id
+    const noteId = note.uuid || note.id;
     navigate(`/notes/${noteId}`);
   };
 
@@ -179,24 +181,24 @@ export default function Notes() {
                 {notes.map((note) => (
                   <div
                     key={note.id}
-                    onClick={() => handleNoteClick(note.id)}
-                    className="p-4 border border-gray-200 rounded-lg hover:shadow-lg transition-shadow cursor-pointer bg-white"
+                    onClick={() => handleNoteClick(note)}
+                    className="p-4 border-2 border-black rounded-lg hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer bg-white"
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm opacity-70">
                         {formatDate(note.created_at)}
                       </div>
                       {note.public && (
-                        <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        <div className="text-xs bg-black text-white px-2 py-1 rounded">
                           Public
                         </div>
                       )}
                     </div>
-                    <div className="text-gray-900 leading-relaxed">
+                    <div className="leading-relaxed">
                       {note.content ? (
                         getPreviewText(note.content)
                       ) : (
-                        <em className="text-gray-400">Empty note</em>
+                        <em className="opacity-50">Empty note</em>
                       )}
                     </div>
                     {note.tags && note.tags.length > 0 && (
@@ -204,7 +206,7 @@ export default function Notes() {
                         {note.tags.map((tag, index) => (
                           <span
                             key={index}
-                            className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded"
+                            className="text-xs bg-gray-200 text-black px-2 py-1 rounded"
                           >
                             {tag}
                           </span>
