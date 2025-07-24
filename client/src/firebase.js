@@ -23,7 +23,7 @@ export { auth }; // Export auth so you can use it elsewhere
 export const signInWithGoogle = async () => {
   try {
     // Check if user is already signed in - use the existing auth instance
-    const currentUser = auth.currentUser;
+    let currentUser = auth.currentUser;
 
     // User is not signed in, proceed with Google sign-in
     if (!currentUser) {
