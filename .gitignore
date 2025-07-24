@@ -4,3 +4,4 @@ server/serviceAccountKey.json
 node_modules
 client/node_modules
 server/node_modules
+query-temp.txt
