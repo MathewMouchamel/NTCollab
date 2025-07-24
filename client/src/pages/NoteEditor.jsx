@@ -13,6 +13,7 @@ export default function NoteEditor() {
   const [saveStatus, setSaveStatus] = useState("idle"); // idle, saving, saved, error
   const [isLoading, setIsLoading] = useState(true);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [currentNoteId, setCurrentNoteId] = useState(id);
   const saveTimeoutRef = useRef(null);
   const quillRef = useRef(null);
 
@@ -43,9 +44,9 @@ export default function NoteEditor() {
 
   // Fetch note if editing existing note
   useEffect(() => {
-    if (id && user) {
+    if (id && id !== "new" && user) {
       fetchNote();
-    } else if (!id) {
+    } else if (id === "new" || !id) {
       // New note
       setIsLoading(false);
       // Focus the editor for new notes
@@ -84,10 +85,10 @@ export default function NoteEditor() {
         if (saveTimeoutRef.current) {
           clearTimeout(saveTimeoutRef.current);
         }
-        const noteToSave = id 
+        const noteToSave = currentNoteId && currentNoteId !== "new"
           ? { content: note.content }
           : { content: note.content, tags: note.tags, public: note.public };
-        saveNote(noteToSave, id ? true : false);
+        saveNote(noteToSave, currentNoteId && currentNoteId !== "new" ? true : false);
       }
     };
 
@@ -95,7 +96,7 @@ export default function NoteEditor() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [note, id]);
+  }, [note, currentNoteId]);
 
   const fetchNote = async () => {
     try {
@@ -108,6 +109,7 @@ export default function NoteEditor() {
       if (response.ok) {
         const noteData = await response.json();
         setNote(noteData);
+        setCurrentNoteId(noteData.id);
       } else {
         console.error("Failed to fetch note");
         navigate("/notes");
@@ -123,10 +125,11 @@ export default function NoteEditor() {
   const saveNote = async (noteToSave, isPartialUpdate = false) => {
     setSaveStatus("saving");
     try {
-      const url = id
-        ? `http://localhost:3000/api/notes/${id}`
+      const noteId = currentNoteId && currentNoteId !== "new" ? currentNoteId : null;
+      const url = noteId
+        ? `http://localhost:3000/api/notes/${noteId}`
         : `http://localhost:3000/api/notes`;
-      const method = id ? (isPartialUpdate ? "PATCH" : "PUT") : "POST";
+      const method = noteId ? (isPartialUpdate ? "PATCH" : "PUT") : "POST";
 
       const response = await fetch(url, {
         method,
@@ -143,9 +146,11 @@ export default function NoteEditor() {
         setSaveStatus("saved");
         setHasUnsavedChanges(false);
 
-        // If this was a new note, update the URL to include the ID
-        if (!id) {
-          navigate(`/notes/${savedNote.id}`, { replace: true });
+        // If this was a new note, update the current note ID but don't navigate
+        if (!noteId || noteId === "new") {
+          setCurrentNoteId(savedNote.id);
+          // Update the URL without navigating (replace history state)
+          window.history.replaceState(null, "", `/notes/${savedNote.id}`);
         }
 
         // Clear saved status after 2 seconds
@@ -167,12 +172,12 @@ export default function NoteEditor() {
       clearTimeout(saveTimeoutRef.current);
     }
     saveTimeoutRef.current = setTimeout(() => {
-      const noteToSave = id 
+      const noteToSave = currentNoteId && currentNoteId !== "new"
         ? { content } // Use PATCH for existing notes (partial update)
         : { content, tags: note.tags, public: note.public }; // Use POST for new notes (full data)
-      saveNote(noteToSave, id ? true : false);
+      saveNote(noteToSave, currentNoteId && currentNoteId !== "new" ? true : false);
     }, 1000); // Save after 1 second of inactivity
-  }, [id, note.tags, note.public]);
+  }, [currentNoteId, note.tags, note.public]);
 
   const handleContentChange = useCallback((content) => {
     // Validate content to prevent empty saves
@@ -197,7 +202,7 @@ export default function NoteEditor() {
     switch (saveStatus) {
       case "saving":
         return (
-          <span className="text-yellow-600 flex items-center">
+          <span className="text-gray-600 flex items-center">
             <svg className="animate-spin h-4 w-4 mr-1" viewBox="0 0 24 24">
               <circle
                 className="opacity-25"
@@ -219,7 +224,7 @@ export default function NoteEditor() {
         );
       case "saved":
         return (
-          <span className="text-green-600 flex items-center">
+          <span className="text-black flex items-center">
             <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
@@ -232,7 +237,7 @@ export default function NoteEditor() {
         );
       case "error":
         return (
-          <span className="text-red-600 flex items-center">
+          <span className="text-black flex items-center">
             <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
@@ -269,27 +274,27 @@ export default function NoteEditor() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="border-b border-gray-200 px-4 py-3">
-                  <div className="flex items-center justify-between max-w-4xl mx-auto">
-            <div className="flex items-center">
-              <button
-                onClick={handleBackToNotes}
-                className="flex items-center text-gray-600 hover:text-black transition-colors mr-4"
-              >
-                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to Notes
-              </button>
-              {note.content && (
-                <h1 className="text-lg font-medium text-gray-900 truncate max-w-xs">
-                  {note.content.replace(/<[^>]*>/g, "").substring(0, 50)}
-                  {note.content.replace(/<[^>]*>/g, "").length > 50 ? "..." : ""}
-                </h1>
-              )}
-            </div>
-            <div className="text-sm">{getStatusDisplay()}</div>
+      <div className="border-b-2 border-black px-4 py-3">
+        <div className="flex items-center justify-between max-w-4xl mx-auto">
+          <div className="flex items-center">
+            <button
+              onClick={handleBackToNotes}
+              className="flex items-center text-gray-600 hover:text-black transition-colors mr-4"
+            >
+              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Notes
+            </button>
+            {note.content && (
+              <h1 className="text-lg font-medium text-gray-900 truncate max-w-xs">
+                {note.content.replace(/<[^>]*>/g, "").substring(0, 50)}
+                {note.content.replace(/<[^>]*>/g, "").length > 50 ? "..." : ""}
+              </h1>
+            )}
           </div>
+          <div className="text-sm">{getStatusDisplay()}</div>
+        </div>
       </div>
 
       {/* Editor */}
