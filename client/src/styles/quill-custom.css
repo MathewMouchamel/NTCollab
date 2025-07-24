@@ -1,105 +1,29 @@
-/* Custom Quill Editor Styles */
-.ql-container {
-  border: none !important;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 16px;
+/* Custom styles for ReactQuill to improve UX and reduce warning visibility */
+
+.ql-editor {
+  min-height: 200px;
+  font-family: system-ui, -apple-system, sans-serif;
   line-height: 1.6;
 }
 
-.ql-editor {
-  padding: 20px 0 !important;
-  min-height: calc(100vh - 200px);
-  border: none !important;
-}
-
-.ql-editor:focus {
-  outline: none;
+.ql-editor.ql-blank::before {
+  font-style: normal;
+  color: #9ca3af;
 }
 
 .ql-toolbar {
-  border: none !important;
-  border-bottom: 1px solid #e5e7eb !important;
-  padding: 12px 0 !important;
-  margin-bottom: 20px !important;
+  border-top: 1px solid #e5e7eb;
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
 }
 
-.ql-toolbar .ql-formats {
-  margin-right: 20px;
+.ql-container {
+  border-bottom: 1px solid #e5e7eb;
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
 }
 
-.ql-toolbar button {
-  border-radius: 4px !important;
-  margin: 0 2px;
-}
-
-.ql-toolbar button:hover {
-  background-color: #f3f4f6 !important;
-}
-
-.ql-toolbar button.ql-active {
-  background-color: #000 !important;
-  color: white !important;
-}
-
-.ql-editor p {
-  margin-bottom: 12px;
-}
-
-.ql-editor h1, .ql-editor h2, .ql-editor h3 {
-  margin-top: 24px;
-  margin-bottom: 16px;
-  font-weight: 600;
-}
-
-.ql-editor h1 {
-  font-size: 2rem;
-}
-
-.ql-editor h2 {
-  font-size: 1.5rem;
-}
-
-.ql-editor h3 {
-  font-size: 1.25rem;
-}
-
-.ql-editor blockquote {
-  border-left: 4px solid #e5e7eb;
-  margin: 16px 0;
-  padding-left: 16px;
-  color: #6b7280;
-}
-
-.ql-editor pre {
-  background-color: #f8f9fa;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 12px;
-  margin: 16px 0;
-  overflow-x: auto;
-}
-
-.ql-editor ul, .ql-editor ol {
-  margin: 16px 0;
-  padding-left: 24px;
-}
-
-.ql-editor li {
-  margin-bottom: 8px;
-}
-
-.ql-editor a {
-  color: #2563eb;
-  text-decoration: underline;
-}
-
-.ql-editor a:hover {
-  color: #1d4ed8;
-}
-
-/* Placeholder styling */
-.ql-editor.ql-blank::before {
-  color: #9ca3af;
-  font-style: normal;
-  font-size: 16px;
+/* Hide React DevTools warnings in production */
+.react-warnings {
+  display: none !important;
 }
