@@ -4,23 +4,49 @@
   min-height: 200px;
   font-family: system-ui, -apple-system, sans-serif;
   line-height: 1.6;
+  border: none !important;
 }
 
 .ql-editor.ql-blank::before {
   font-style: normal;
-  color: #9ca3af;
+  color: #6b7280;
 }
 
 .ql-toolbar {
-  border-top: 1px solid #e5e7eb;
-  border-left: 1px solid #e5e7eb;
-  border-right: 1px solid #e5e7eb;
+  border: 3px solid #000 !important;
+  border-bottom: none !important;
+  background: white;
 }
 
 .ql-container {
-  border-bottom: 1px solid #e5e7eb;
-  border-left: 1px solid #e5e7eb;
-  border-right: 1px solid #e5e7eb;
+  border: 3px solid #000 !important;
+  border-top: none !important;
+}
+
+.ql-toolbar .ql-stroke {
+  stroke: #000;
+}
+
+.ql-toolbar .ql-fill {
+  fill: #000;
+}
+
+.ql-toolbar button:hover,
+.ql-toolbar button:focus {
+  color: #000;
+}
+
+.ql-toolbar button.ql-active {
+  color: #000;
+}
+
+.ql-picker-label {
+  color: #000;
+}
+
+.ql-picker-options {
+  background: white;
+  border: 2px solid #000;
 }
 
 /* Hide React DevTools warnings in production */

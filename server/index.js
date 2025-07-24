@@ -51,6 +51,25 @@ router.post("/", verifyFirebaseToken, async (req, res) => {
 // GET /api/notes (list notes for current user)
 router.get("/", verifyFirebaseToken, async (req, res) => {
   const owner_uid = req.user.uid;
+  const { uuid } = req.query;
+  
+  // If UUID is provided, search for a specific note by UUID
+  if (uuid) {
+    const { data, error } = await supabase
+      .from("notes")
+      .select("*")
+      .eq("uuid", uuid)
+      .eq("owner_uid", owner_uid)
+      .single();
+    
+    if (error || !data) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+    
+    return res.json(data);
+  }
+  
+  // Otherwise, return all notes for the user
   const { data, error } = await supabase
     .from("notes")
     .select("*")
@@ -63,11 +82,22 @@ router.get("/", verifyFirebaseToken, async (req, res) => {
 // GET /api/notes/:id (read note, check permissions)
 router.get("/:id", verifyFirebaseToken, async (req, res) => {
   const { id } = req.params;
-  const { data, error } = await supabase
+  
+  // Try to find by UUID first, then by ID
+  let query = supabase
     .from("notes")
-    .select("*")
-    .eq("id", id)
-    .single();
+    .select("*");
+  
+  // Check if the id looks like a UUID (contains hyphens) or is a number
+  const isUUID = id.includes('-');
+  
+  if (isUUID) {
+    query = query.eq("uuid", id);
+  } else {
+    query = query.eq("id", id);
+  }
+  
+  const { data, error } = await query.single();
   if (error || !data) return res.status(404).json({ error: "Note not found" });
   
   // Check if user can access this note
@@ -82,20 +112,28 @@ router.get("/:id", verifyFirebaseToken, async (req, res) => {
 router.put("/:id", verifyFirebaseToken, async (req, res) => {
   const { id } = req.params;
   const { content, tags, public: isPublic } = req.body;
+  
+  // Check if the id looks like a UUID or is a number
+  const isUUID = id.includes('-');
+  
   // Only owner can update
-  const { data: note, error: fetchError } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("id", id)
-    .single();
+  let fetchQuery = supabase.from("notes").select("*");
+  if (isUUID) {
+    fetchQuery = fetchQuery.eq("uuid", id);
+  } else {
+    fetchQuery = fetchQuery.eq("id", id);
+  }
+  
+  const { data: note, error: fetchError } = await fetchQuery.single();
   if (fetchError || !note)
     return res.status(404).json({ error: "Note not found" });
   if (note.owner_uid !== req.user.uid)
     return res.status(403).json({ error: "Forbidden" });
+    
   const { data, error } = await supabase
     .from("notes")
     .update({ content, tags, public: isPublic })
-    .eq("id", id)
+    .eq("id", note.id) // Always use the numeric ID for updates
     .select()
     .single();
   if (error) return res.status(400).json({ error: error.message });
@@ -118,12 +156,18 @@ router.patch("/:id", verifyFirebaseToken, async (req, res) => {
       return res.status(400).json({ error: "No fields to update" });
     }
     
+    // Check if the id looks like a UUID or is a number
+    const isUUID = id.includes('-');
+    
     // Only owner can update
-    const { data: note, error: fetchError } = await supabase
-      .from("notes")
-      .select("*")
-      .eq("id", id)
-      .single();
+    let fetchQuery = supabase.from("notes").select("*");
+    if (isUUID) {
+      fetchQuery = fetchQuery.eq("uuid", id);
+    } else {
+      fetchQuery = fetchQuery.eq("id", id);
+    }
+    
+    const { data: note, error: fetchError } = await fetchQuery.single();
     if (fetchError || !note) {
       console.error("Note fetch error:", fetchError);
       return res.status(404).json({ error: "Note not found" });
@@ -134,7 +178,7 @@ router.patch("/:id", verifyFirebaseToken, async (req, res) => {
     const { data, error } = await supabase
       .from("notes")
       .update(updateFields)
-      .eq("id", id)
+      .eq("id", note.id) // Always use the numeric ID for updates
       .select()
       .single();
     if (error) {
@@ -151,17 +195,24 @@ router.patch("/:id", verifyFirebaseToken, async (req, res) => {
 // DELETE /api/notes/:id (delete note)
 router.delete("/:id", verifyFirebaseToken, async (req, res) => {
   const { id } = req.params;
+  
+  // Check if the id looks like a UUID or is a number
+  const isUUID = id.includes('-');
+  
   // Only owner can delete
-  const { data: note, error: fetchError } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("id", id)
-    .single();
+  let fetchQuery = supabase.from("notes").select("*");
+  if (isUUID) {
+    fetchQuery = fetchQuery.eq("uuid", id);
+  } else {
+    fetchQuery = fetchQuery.eq("id", id);
+  }
+  
+  const { data: note, error: fetchError } = await fetchQuery.single();
   if (fetchError || !note)
     return res.status(404).json({ error: "Note not found" });
   if (note.owner_uid !== req.user.uid)
     return res.status(403).json({ error: "Forbidden" });
-  const { error } = await supabase.from("notes").delete().eq("id", id);
+  const { error } = await supabase.from("notes").delete().eq("id", note.id);
   if (error) return res.status(400).json({ error: error.message });
   res.status(204).send();
 });
