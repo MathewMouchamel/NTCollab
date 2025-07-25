@@ -49,6 +49,33 @@ router.post("/", verifyFirebaseToken, async (req, res) => {
   }
 });
 
+// POST /api/notes/blank (create blank note)
+router.post("/blank", verifyFirebaseToken, async (req, res) => {
+  try {
+    const owner_uid = req.user.uid;
+    
+    const { data, error } = await supabase
+      .from("notes")
+      .insert([{ 
+        content: '', 
+        tags: [], 
+        public: false, 
+        owner_uid,
+        title: '',
+      }])
+      .select()
+      .single();
+    if (error) {
+      console.error("Supabase error:", error);
+      return res.status(400).json({ error: error.message });
+    }
+    res.status(201).json(data);
+  } catch (error) {
+    console.error("Server error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // GET /api/notes (list notes for current user)
 router.get("/", verifyFirebaseToken, async (req, res) => {
   const owner_uid = req.user.uid;

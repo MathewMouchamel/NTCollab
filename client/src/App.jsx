@@ -11,7 +11,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/notes" element={<Notes />} />
-          <Route path="/notes/new" element={<NoteEditor />} />
           <Route path="/notes/:id" element={<NoteEditor />} />
         </Routes>
       </AuthProvider>

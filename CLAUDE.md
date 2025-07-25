@@ -48,7 +48,8 @@ npm run check    # Validate configuration (Firebase/Supabase setup)
 
 ### API Endpoints
 All note operations are under `/api/notes`:
-- `POST /api/notes` - Create note
+- `POST /api/notes` - Create note (legacy)
+- `POST /api/notes/blank` - Create blank note (returns note with UUID for immediate editing)
 - `GET /api/notes` - List user's notes (supports `?tag=` and `?uuid=` filters)
 - `GET /api/notes/:id` - Get specific note (supports UUID or numeric ID)
 - `PUT /api/notes/:id` - Full update note
@@ -85,3 +86,15 @@ Either use `server/serviceAccountKey.json` or environment variables for Firebase
 - Configuration constants centralized in `client/src/constants.js`
 - Components optimized with React.memo, useCallback, and useMemo for performance
 - Server middleware available for error handling and validation
+
+## Note Creation Flow
+
+All notes in NoteEditor are existing notes with UUIDs:
+1. User clicks "Create New Note" in Notes.jsx
+2. Frontend POSTs to `/api/notes/blank` to create empty note in database
+3. Server returns note with auto-generated UUID
+4. Frontend navigates to `/notes/{uuid}` 
+5. NoteEditor loads the existing blank note and user can start editing
+6. All saves use PATCH/PUT operations on existing note
+
+This eliminates the complexity of handling "new" vs "existing" notes in the editor.

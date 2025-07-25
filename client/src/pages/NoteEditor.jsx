@@ -18,7 +18,7 @@ import {
 } from "../constants";
 
 export default function NoteEditor() {
-  const { id } = useParams();
+  const { id: noteUuid } = useParams(); // id is always a UUID
   const navigate = useNavigate();
   const { user } = useAuth();
   const [note, setNote] = useState({
@@ -30,7 +30,7 @@ export default function NoteEditor() {
   const [saveStatus, setSaveStatus] = useState("idle"); // idle, saving, saved, error
   const [isLoading, setIsLoading] = useState(true);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [currentNoteId, setCurrentNoteId] = useState(id === "new" ? "new" : null);
+  const [noteId, setNoteId] = useState(null); // Store the numeric ID for API calls
   const saveTimeoutRef = useRef(null);
   const quillRef = useRef(null);
 
@@ -40,7 +40,7 @@ export default function NoteEditor() {
 
   const fetchNote = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/notes/${noteUuid}`, {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
@@ -49,8 +49,8 @@ export default function NoteEditor() {
       if (response.ok) {
         const noteData = await response.json();
         setNote(noteData);
-        // Always use the numeric ID for operations, not the UUID
-        setCurrentNoteId(noteData.id);
+        // Store the numeric ID for API operations
+        setNoteId(noteData.id);
       } else {
         console.error("Failed to fetch note");
         navigate("/notes");
@@ -61,18 +61,21 @@ export default function NoteEditor() {
     } finally {
       setIsLoading(false);
     }
-  }, [id, user, navigate]);
+  }, [noteUuid, user, navigate]);
 
   const saveNote = useCallback(
     async (noteToSave, isPartialUpdate = false) => {
+      // Don't save if we don't have the noteId yet
+      if (!noteId) {
+        console.log("Note not loaded yet, skipping save");
+        return;
+      }
+
       setSaveStatus("saving");
       try {
-        const noteId =
-          currentNoteId && currentNoteId !== "new" ? currentNoteId : null;
-        const url = noteId
-          ? `${API_BASE_URL}/notes/${noteId}`
-          : `${API_BASE_URL}/notes`;
-        const method = noteId ? (isPartialUpdate ? "PATCH" : "PUT") : "POST";
+        // Always use the numeric ID for updates since all notes are existing
+        const url = `${API_BASE_URL}/notes/${noteId}`;
+        const method = isPartialUpdate ? "PATCH" : "PUT";
 
         const response = await fetch(url, {
           method,
@@ -89,15 +92,6 @@ export default function NoteEditor() {
           setSaveStatus("saved");
           setHasUnsavedChanges(false);
 
-          // If this was a new note, update the current note ID and URL
-          if (!noteId || noteId === "new") {
-            // Always use the numeric ID for future operations
-            setCurrentNoteId(savedNote.id);
-            // Update the URL to use UUID for user-friendly URLs, but keep numeric ID for operations
-            const displayId = savedNote.uuid || savedNote.id;
-            window.history.replaceState(null, "", `/notes/${displayId}`);
-          }
-
           // Clear saved status after 2 seconds
           setTimeout(() => setSaveStatus("idle"), 2000);
         } else {
@@ -110,24 +104,15 @@ export default function NoteEditor() {
         setTimeout(() => setSaveStatus("idle"), 3000);
       }
     },
-    [currentNoteId, user]
+    [noteId, user]
   );
 
-  // Fetch note if editing existing note
+  // Always fetch the note since all notes are existing
   useEffect(() => {
-    if (id && id !== "new" && user) {
+    if (noteUuid && user) {
       fetchNote();
-    } else if (id === "new" || !id) {
-      // New note
-      setIsLoading(false);
-      // Focus the editor for new notes
-      setTimeout(() => {
-        if (quillRef.current) {
-          quillRef.current.focus();
-        }
-      }, 100);
     }
-  }, [id, user, fetchNote]);
+  }, [noteUuid, user, fetchNote]);
 
   // Handle navigation warning for unsaved changes
   useEffect(() => {
@@ -156,14 +141,8 @@ export default function NoteEditor() {
         if (saveTimeoutRef.current) {
           clearTimeout(saveTimeoutRef.current);
         }
-        const noteToSave =
-          currentNoteId && currentNoteId !== "new"
-            ? { content: note.content }
-            : { content: note.content, tags: note.tags, public: note.public };
-        saveNote(
-          noteToSave,
-          currentNoteId && currentNoteId !== "new" ? true : false
-        );
+        const noteToSave = { content: note.content };
+        saveNote(noteToSave, true);
       }
     };
 
@@ -171,7 +150,7 @@ export default function NoteEditor() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [note, currentNoteId, saveNote]);
+  }, [note, saveNote]);
 
   const debouncedSave = useCallback(
     (content) => {
@@ -180,17 +159,11 @@ export default function NoteEditor() {
         clearTimeout(saveTimeoutRef.current);
       }
       saveTimeoutRef.current = setTimeout(() => {
-        const noteToSave =
-          currentNoteId && currentNoteId !== "new"
-            ? { content } // Use PATCH for existing notes (partial update)
-            : { content, tags: note.tags, public: note.public }; // Use POST for new notes (full data)
-        saveNote(
-          noteToSave,
-          currentNoteId && currentNoteId !== "new" ? true : false
-        );
+        const noteToSave = { content }; // Always PATCH for existing notes
+        saveNote(noteToSave, true);
       }, AUTO_SAVE_DELAY);
     },
-    [currentNoteId, note.tags, note.public, saveNote]
+    [saveNote]
   );
 
   const handleContentChange = useCallback(
@@ -211,15 +184,9 @@ export default function NoteEditor() {
     setHasUnsavedChanges(true);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-      const noteToSave =
-        currentNoteId && currentNoteId !== "new"
-          ? { title: newTitle }
-          : { ...note, title: newTitle };
-      saveNote(
-        noteToSave,
-        currentNoteId && currentNoteId !== "new" ? true : false
-      );
-    }, 1000);
+      const noteToSave = { title: newTitle };
+      saveNote(noteToSave, true);
+    }, AUTO_SAVE_DELAY);
   };
   const handleTagsChange = (e) => {
     const tags = e.target.value
@@ -230,13 +197,9 @@ export default function NoteEditor() {
     setHasUnsavedChanges(true);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-      const noteToSave =
-        currentNoteId && currentNoteId !== "new" ? { tags } : { ...note, tags };
-      saveNote(
-        noteToSave,
-        currentNoteId && currentNoteId !== "new" ? true : false
-      );
-    }, 1000);
+      const noteToSave = { tags };
+      saveNote(noteToSave, true);
+    }, AUTO_SAVE_DELAY);
   };
 
   const handleBackToNotes = () => {

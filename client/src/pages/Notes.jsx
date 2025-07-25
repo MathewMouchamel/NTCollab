@@ -56,9 +56,27 @@ export default function Notes() {
     }
   }, [user, selectedTag, fetchNotes]);
 
-  const handleCreateNewNote = useCallback(() => {
-    navigate("/notes/new");
-  }, [navigate]);
+  const handleCreateNewNote = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/notes/blank`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const newNote = await response.json();
+        // Navigate to the new note using its UUID
+        navigate(`/notes/${newNote.uuid}`);
+      } else {
+        console.error('Failed to create new note');
+      }
+    } catch (error) {
+      console.error('Error creating new note:', error);
+    }
+  }, [navigate, user]);
 
   const handleNoteClick = useCallback(
     (note) => {
