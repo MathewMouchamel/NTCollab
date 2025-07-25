@@ -13,19 +13,6 @@ export default function Notes() {
   const [selectedTag, setSelectedTag] = useState(null);
   const [allTags, setAllTags] = useState([]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setShowContent(true), 200);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      fetchNotes();
-    } else {
-      setIsLoading(false);
-    }
-  }, [user, selectedTag, fetchNotes]);
-
   const fetchNotes = useCallback(async () => {
     try {
       let url = `${API_BASE_URL}/notes`;
@@ -42,7 +29,9 @@ export default function Notes() {
         setNotes(notesData);
         // Collect all unique tags
         const tagsSet = new Set();
-        notesData.forEach(note => (note.tags || []).forEach(tag => tagsSet.add(tag)));
+        notesData.forEach((note) =>
+          (note.tags || []).forEach((tag) => tagsSet.add(tag))
+        );
         setAllTags(Array.from(tagsSet));
       } else {
         console.error("Failed to fetch notes");
@@ -54,20 +43,38 @@ export default function Notes() {
     }
   }, [user, selectedTag]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setShowContent(true), 200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchNotes();
+    } else {
+      setIsLoading(false);
+    }
+  }, [user, selectedTag, fetchNotes]);
+
   const handleCreateNewNote = useCallback(() => {
     navigate("/notes/new");
   }, [navigate]);
 
-  const handleNoteClick = useCallback((note) => {
-    // Use UUID if available, otherwise fall back to id
-    const noteId = note.uuid || note.id;
-    navigate(`/notes/${noteId}`);
-  }, [navigate]);
+  const handleNoteClick = useCallback(
+    (note) => {
+      // Use UUID if available, otherwise fall back to id
+      const noteId = note.uuid || note.id;
+      navigate(`/notes/${noteId}`);
+    },
+    [navigate]
+  );
 
   const getPreviewText = useCallback((content) => {
     // Strip HTML tags and get first 100 characters
     const textContent = content.replace(/<[^>]*>/g, "");
-    return textContent.length > 100 ? textContent.substring(0, 100) + "..." : textContent;
+    return textContent.length > 100
+      ? textContent.substring(0, 100) + "..."
+      : textContent;
   }, []);
 
   const formatDate = useCallback((dateString) => {
@@ -144,15 +151,23 @@ export default function Notes() {
             <div className="mb-6 flex flex-wrap gap-2 max-w-4xl mx-auto">
               <span className="font-semibold mr-2">Filter by tag:</span>
               <button
-                className={`px-3 py-1 rounded ${selectedTag === null ? 'bg-black text-white' : 'bg-gray-200 text-black'}`}
+                className={`px-3 py-1 rounded ${
+                  selectedTag === null
+                    ? "bg-black text-white"
+                    : "bg-gray-200 text-black"
+                }`}
                 onClick={() => setSelectedTag(null)}
               >
                 All
               </button>
-              {allTags.map(tag => (
+              {allTags.map((tag) => (
                 <button
                   key={tag}
-                  className={`px-3 py-1 rounded ${selectedTag === tag ? 'bg-black text-white' : 'bg-gray-200 text-black'}`}
+                  className={`px-3 py-1 rounded ${
+                    selectedTag === tag
+                      ? "bg-black text-white"
+                      : "bg-gray-200 text-black"
+                  }`}
                   onClick={() => setSelectedTag(tag)}
                 >
                   {tag}
