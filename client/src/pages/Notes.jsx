@@ -185,7 +185,7 @@ export default function Notes() {
                     selectedTag === tag
                       ? "bg-black text-white"
                       : "bg-gray-200 text-black"
-                  }`}
+                  } cursor-pointer`}
                   onClick={() => setSelectedTag(tag)}
                 >
                   {tag}
