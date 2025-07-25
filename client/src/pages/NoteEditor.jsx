@@ -122,7 +122,8 @@ export default function NoteEditor() {
     const handleBeforeUnload = (e) => {
       if (hasUnsavedChanges) {
         e.preventDefault();
-        e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+        e.returnValue =
+          "You have unsaved changes. Are you sure you want to leave?";
         return e.returnValue;
       }
     };
@@ -194,16 +195,16 @@ export default function NoteEditor() {
   };
 
   const handleTagInputKeyDown = (e) => {
-    if (e.key === 'Enter' && tagInput.trim()) {
+    if (e.key === "Enter" && tagInput.trim()) {
       e.preventDefault();
       const newTag = tagInput.trim();
-      
+
       // Add tag if it doesn't already exist
       if (!note.tags.includes(newTag)) {
         const newTags = [...note.tags, newTag];
         setNote((prev) => ({ ...prev, tags: newTags }));
         setHasUnsavedChanges(true);
-        
+
         // Save the new tags
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
         saveTimeoutRef.current = setTimeout(() => {
@@ -211,17 +212,17 @@ export default function NoteEditor() {
           saveNote(noteToSave, true);
         }, AUTO_SAVE_DELAY);
       }
-      
+
       // Clear the input
       setTagInput("");
     }
   };
 
   const handleRemoveTag = (tagToRemove) => {
-    const newTags = note.tags.filter(tag => tag !== tagToRemove);
+    const newTags = note.tags.filter((tag) => tag !== tagToRemove);
     setNote((prev) => ({ ...prev, tags: newTags }));
     setHasUnsavedChanges(true);
-    
+
     // Save the updated tags
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
@@ -243,14 +244,14 @@ export default function NoteEditor() {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    
+
     const noteToSave = {
       content: note.content,
       title: note.title,
       tags: note.tags,
-      public: note.public
+      public: note.public,
     };
-    
+
     await saveNote(noteToSave, false); // Use PUT for full save
     setShowUnsavedModal(false);
     navigate("/notes");
@@ -389,20 +390,20 @@ export default function NoteEditor() {
         <div className="flex flex-wrap items-center gap-2 border-b border-gray-300 pb-2 mb-2">
           {/* Existing tags as bubbles */}
           {note.tags.map((tag, index) => (
-            <div
+            <button
               key={index}
-              className="group flex items-center bg-black text-white px-2 py-1 rounded-full text-sm hover:bg-gray-800 transition-colors duration-200"
+              type="button"
+              className="group relative px-3 py-1 rounded-full border-2 border-black bg-black text-white text-sm cursor-pointer transition-colors duration-200"
+              onClick={() => handleRemoveTag(tag)}
+              title="Remove tag"
             >
-              <span>{tag}</span>
-              <button
-                className="ml-2 opacity-0 group-hover:opacity-100 hover:bg-white hover:text-black rounded-full w-4 h-4 flex items-center justify-center text-xs transition-all duration-200"
-                onClick={() => handleRemoveTag(tag)}
-              >
-                ×
-              </button>
-            </div>
+              {/* Tag text, hidden on hover */}
+              <span className="block w-full text-center transition-colors duration-200 group-hover:line-through decoration-2">
+                {tag}
+              </span>
+            </button>
           ))}
-          
+
           {/* Tag input field */}
           <input
             className="flex-1 min-w-[120px] text-base outline-none bg-white"
