@@ -59,22 +59,22 @@ export default function Notes() {
   const handleCreateNewNote = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/notes/blank`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${user.token}`,
         },
       });
-      
+
       if (response.ok) {
         const newNote = await response.json();
         // Navigate to the new note using its UUID
         navigate(`/notes/${newNote.uuid}`);
       } else {
-        console.error('Failed to create new note');
+        console.error("Failed to create new note");
       }
     } catch (error) {
-      console.error('Error creating new note:', error);
+      console.error("Error creating new note:", error);
     }
   }, [navigate, user]);
 
@@ -247,23 +247,11 @@ export default function Notes() {
                     onClick={() => handleNoteClick(note)}
                     className="p-4 border-2 border-black rounded-lg hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer bg-white"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="text-sm opacity-70">
-                        {formatDate(note.created_at)}
-                      </div>
-                      {note.public && (
-                        <div className="text-xs bg-black text-white px-2 py-1 rounded">
-                          Public
-                        </div>
-                      )}
+                    {/* Show only the title */}
+                    <div className="text-xl font-semibold mb-2">
+                      {note.title || <em className="opacity-50">Untitled</em>}
                     </div>
-                    <div className="leading-relaxed">
-                      {note.content ? (
-                        getPreviewText(note.content)
-                      ) : (
-                        <em className="opacity-50">Empty note</em>
-                      )}
-                    </div>
+                    {/* Show only the tags */}
                     {note.tags && note.tags.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-1">
                         {note.tags.map((tag, index) => (
