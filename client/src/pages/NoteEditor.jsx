@@ -1,16 +1,32 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "../styles/quill-custom.css";
-import { API_BASE_URL, AUTO_SAVE_DELAY, QUILL_MODULES, QUILL_FORMATS } from "../constants";
+import {
+  API_BASE_URL,
+  AUTO_SAVE_DELAY,
+  QUILL_MODULES,
+  QUILL_FORMATS,
+} from "../constants";
 
 export default function NoteEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [note, setNote] = useState({ title: "", content: "", tags: [], public: false });
+  const [note, setNote] = useState({
+    title: "",
+    content: "",
+    tags: [],
+    public: false,
+  });
   const [saveStatus, setSaveStatus] = useState("idle"); // idle, saving, saved, error
   const [isLoading, setIsLoading] = useState(true);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -21,6 +37,31 @@ export default function NoteEditor() {
   // Memoize Quill configuration to prevent unnecessary re-renders
   const modules = useMemo(() => QUILL_MODULES, []);
   const formats = useMemo(() => QUILL_FORMATS, []);
+
+  const fetchNote = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      if (response.ok) {
+        const noteData = await response.json();
+        setNote(noteData);
+        // Always use the numeric ID for operations, not the UUID
+        setCurrentNoteId(noteData.id);
+      } else {
+        console.error("Failed to fetch note");
+        navigate("/notes");
+      }
+    } catch (error) {
+      console.error("Error fetching note:", error);
+      navigate("/notes");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id, user, navigate]);
 
   // Fetch note if editing existing note
   useEffect(() => {
@@ -60,15 +101,19 @@ export default function NoteEditor() {
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Ctrl+S or Cmd+S to save
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         if (saveTimeoutRef.current) {
           clearTimeout(saveTimeoutRef.current);
         }
-        const noteToSave = currentNoteId && currentNoteId !== "new"
-          ? { content: note.content }
-          : { content: note.content, tags: note.tags, public: note.public };
-        saveNote(noteToSave, currentNoteId && currentNoteId !== "new" ? true : false);
+        const noteToSave =
+          currentNoteId && currentNoteId !== "new"
+            ? { content: note.content }
+            : { content: note.content, tags: note.tags, public: note.public };
+        saveNote(
+          noteToSave,
+          currentNoteId && currentNoteId !== "new" ? true : false
+        );
       }
     };
 
@@ -78,98 +123,87 @@ export default function NoteEditor() {
     };
   }, [note, currentNoteId, saveNote]);
 
-  const fetchNote = useCallback(async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      });
+  const saveNote = useCallback(
+    async (noteToSave, isPartialUpdate = false) => {
+      setSaveStatus("saving");
+      try {
+        const noteId =
+          currentNoteId && currentNoteId !== "new" ? currentNoteId : null;
+        const url = noteId
+          ? `${API_BASE_URL}/notes/${noteId}`
+          : `${API_BASE_URL}/notes`;
+        const method = noteId ? (isPartialUpdate ? "PATCH" : "PUT") : "POST";
 
-      if (response.ok) {
-        const noteData = await response.json();
-        setNote(noteData);
-        // Always use the numeric ID for operations, not the UUID
-        setCurrentNoteId(noteData.id);
-      } else {
-        console.error("Failed to fetch note");
-        navigate("/notes");
-      }
-    } catch (error) {
-      console.error("Error fetching note:", error);
-      navigate("/notes");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [id, user, navigate]);
+        const response = await fetch(url, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify(noteToSave),
+        });
 
-  const saveNote = useCallback(async (noteToSave, isPartialUpdate = false) => {
-    setSaveStatus("saving");
-    try {
-      const noteId = currentNoteId && currentNoteId !== "new" ? currentNoteId : null;
-      const url = noteId
-        ? `${API_BASE_URL}/notes/${noteId}`
-        : `${API_BASE_URL}/notes`;
-      const method = noteId ? (isPartialUpdate ? "PATCH" : "PUT") : "POST";
+        if (response.ok) {
+          const savedNote = await response.json();
+          setNote(savedNote);
+          setSaveStatus("saved");
+          setHasUnsavedChanges(false);
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify(noteToSave),
-      });
+          // If this was a new note, update the current note ID and URL
+          if (!noteId || noteId === "new") {
+            // Always use the numeric ID for future operations
+            setCurrentNoteId(savedNote.id);
+            // Update the URL to use UUID for user-friendly URLs, but keep numeric ID for operations
+            const displayId = savedNote.uuid || savedNote.id;
+            window.history.replaceState(null, "", `/notes/${displayId}`);
+          }
 
-      if (response.ok) {
-        const savedNote = await response.json();
-        setNote(savedNote);
-        setSaveStatus("saved");
-        setHasUnsavedChanges(false);
-
-        // If this was a new note, update the current note ID and URL
-        if (!noteId || noteId === "new") {
-          // Always use the numeric ID for future operations
-          setCurrentNoteId(savedNote.id);
-          // Update the URL to use UUID for user-friendly URLs, but keep numeric ID for operations
-          const displayId = savedNote.uuid || savedNote.id;
-          window.history.replaceState(null, "", `/notes/${displayId}`);
+          // Clear saved status after 2 seconds
+          setTimeout(() => setSaveStatus("idle"), 2000);
+        } else {
+          setSaveStatus("error");
+          setTimeout(() => setSaveStatus("idle"), 3000);
         }
-
-        // Clear saved status after 2 seconds
-        setTimeout(() => setSaveStatus("idle"), 2000);
-      } else {
+      } catch (error) {
+        console.error("Error saving note:", error);
         setSaveStatus("error");
         setTimeout(() => setSaveStatus("idle"), 3000);
       }
-    } catch (error) {
-      console.error("Error saving note:", error);
-      setSaveStatus("error");
-      setTimeout(() => setSaveStatus("idle"), 3000);
-    }
-  }, [currentNoteId, user]);
+    },
+    [currentNoteId, user]
+  );
 
-  const debouncedSave = useCallback((content) => {
-    setHasUnsavedChanges(true);
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    saveTimeoutRef.current = setTimeout(() => {
-      const noteToSave = currentNoteId && currentNoteId !== "new"
-        ? { content } // Use PATCH for existing notes (partial update)
-        : { content, tags: note.tags, public: note.public }; // Use POST for new notes (full data)
-      saveNote(noteToSave, currentNoteId && currentNoteId !== "new" ? true : false);
-    }, AUTO_SAVE_DELAY);
-  }, [currentNoteId, note.tags, note.public, saveNote]);
+  const debouncedSave = useCallback(
+    (content) => {
+      setHasUnsavedChanges(true);
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      saveTimeoutRef.current = setTimeout(() => {
+        const noteToSave =
+          currentNoteId && currentNoteId !== "new"
+            ? { content } // Use PATCH for existing notes (partial update)
+            : { content, tags: note.tags, public: note.public }; // Use POST for new notes (full data)
+        saveNote(
+          noteToSave,
+          currentNoteId && currentNoteId !== "new" ? true : false
+        );
+      }, AUTO_SAVE_DELAY);
+    },
+    [currentNoteId, note.tags, note.public, saveNote]
+  );
 
-  const handleContentChange = useCallback((content) => {
-    // Validate content to prevent empty saves
-    if (content === '<p><br></p>' || content === '') {
-      content = '';
-    }
-    setNote((prev) => ({ ...prev, content }));
-    debouncedSave(content);
-  }, [debouncedSave]);
+  const handleContentChange = useCallback(
+    (content) => {
+      // Validate content to prevent empty saves
+      if (content === "<p><br></p>" || content === "") {
+        content = "";
+      }
+      setNote((prev) => ({ ...prev, content }));
+      debouncedSave(content);
+    },
+    [debouncedSave]
+  );
 
   const handleTitleChange = (e) => {
     const newTitle = e.target.value;
@@ -177,22 +211,31 @@ export default function NoteEditor() {
     setHasUnsavedChanges(true);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-      const noteToSave = currentNoteId && currentNoteId !== "new"
-        ? { title: newTitle }
-        : { ...note, title: newTitle };
-      saveNote(noteToSave, currentNoteId && currentNoteId !== "new" ? true : false);
+      const noteToSave =
+        currentNoteId && currentNoteId !== "new"
+          ? { title: newTitle }
+          : { ...note, title: newTitle };
+      saveNote(
+        noteToSave,
+        currentNoteId && currentNoteId !== "new" ? true : false
+      );
     }, 1000);
   };
   const handleTagsChange = (e) => {
-    const tags = e.target.value.split(",").map(t => t.trim()).filter(Boolean);
+    const tags = e.target.value
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
     setNote((prev) => ({ ...prev, tags }));
     setHasUnsavedChanges(true);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-      const noteToSave = currentNoteId && currentNoteId !== "new"
-        ? { tags }
-        : { ...note, tags };
-      saveNote(noteToSave, currentNoteId && currentNoteId !== "new" ? true : false);
+      const noteToSave =
+        currentNoteId && currentNoteId !== "new" ? { tags } : { ...note, tags };
+      saveNote(
+        noteToSave,
+        currentNoteId && currentNoteId !== "new" ? true : false
+      );
     }, 1000);
   };
 
@@ -233,7 +276,11 @@ export default function NoteEditor() {
       case "saved":
         return (
           <span className="text-black flex items-center">
-            <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <svg
+              className="h-4 w-4 mr-1"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path
                 fillRule="evenodd"
                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -246,7 +293,11 @@ export default function NoteEditor() {
       case "error":
         return (
           <span className="text-black flex items-center">
-            <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <svg
+              className="h-4 w-4 mr-1"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path
                 fillRule="evenodd"
                 d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
@@ -289,8 +340,18 @@ export default function NoteEditor() {
               onClick={handleBackToNotes}
               className="flex items-center text-gray-600 hover:text-black transition-colors mr-4"
             >
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="h-5 w-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
               Back to Notes
             </button>
