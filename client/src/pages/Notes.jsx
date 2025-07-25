@@ -177,7 +177,7 @@ export default function Notes() {
               <span className="font-semibold mr-2">Filter by tags:</span>
               {selectedTags.length > 0 && (
                 <button
-                  className="px-3 py-1 rounded border-2 border-black bg-gray-100 text-black hover:bg-black hover:text-white cursor-pointer"
+                  className="px-3 py-1 rounded-full border-2 border-black bg-gray-100 text-black hover:bg-black hover:text-white cursor-pointer"
                   onClick={clearAllTags}
                 >
                   Clear All
@@ -188,7 +188,7 @@ export default function Notes() {
                 return (
                   <button
                     key={tag}
-                    className={`group relative px-3 py-1 rounded border-2 border-black hover:bg-black hover:text-white ${
+                    className={`group relative px-3 py-1 rounded-full border-2 border-black hover:bg-black hover:text-white ${
                       isSelected
                         ? "bg-black text-white hover:line-through decoration-2"
                         : "bg-white text-black"
@@ -211,7 +211,37 @@ export default function Notes() {
                 <p className="text-gray-600">Loading notes...</p>
               </div>
             </div>
-          ) : notes.length === 0 ? (
+          ) : notes.length !== 0 ? (
+            <div className="flex-1 w-full max-w-4xl mx-auto">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {notes.map((note) => (
+                  <div
+                    key={note.id}
+                    onClick={() => handleNoteClick(note)}
+                    className="p-4 border-2 border-black rounded-lg hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer bg-white group"
+                  >
+                    {/* Show only the title */}
+                    <div className="text-xl font-semibold mb-2">
+                      {note.title || <em className="opacity-50">Untitled</em>}
+                    </div>
+                    {/* Show only the tags */}
+                    {note.tags && note.tags.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        {note.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="text-xs bg-white text-black px-2 py-1 rounded-full border border-black group-hover:bg-black group-hover:text-white group-hover:border-white transition-colors duration-200"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : selectedTags.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center">
               {/* Fun black/white SVG (note with a smiley face) */}
               <svg
@@ -249,34 +279,39 @@ export default function Notes() {
               </p>
             </div>
           ) : (
-            <div className="flex-1 w-full max-w-4xl mx-auto">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {notes.map((note) => (
-                  <div
-                    key={note.id}
-                    onClick={() => handleNoteClick(note)}
-                    className="p-4 border-2 border-black rounded-lg hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer bg-white group"
-                  >
-                    {/* Show only the title */}
-                    <div className="text-xl font-semibold mb-2">
-                      {note.title || <em className="opacity-50">Untitled</em>}
-                    </div>
-                    {/* Show only the tags */}
-                    {note.tags && note.tags.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1">
-                        {note.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="text-xs bg-white text-black px-2 py-1 rounded-full border border-black group-hover:bg-black group-hover:text-white group-hover:border-white transition-colors duration-200"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+            <div className="flex-1 flex flex-col items-center justify-center">
+              {/* Fun black/white SVG (note with a smiley face) */}
+              <svg
+                width="120"
+                height="120"
+                viewBox="0 0 120 120"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="mb-6"
+              >
+                <rect
+                  x="20"
+                  y="20"
+                  width="80"
+                  height="100"
+                  rx="12"
+                  fill="#fff"
+                  stroke="#000"
+                  strokeWidth="4"
+                />
+                <circle cx="45" cy="60" r="5" fill="#000" />
+                <circle cx="75" cy="60" r="5" fill="#000" />
+                <path
+                  d="M50 80 Q60 90 70 80"
+                  stroke="#000"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <p className="text-xl font-semibold mb-6 text-center">
+                No notes found!
+              </p>
             </div>
           )}
         </div>
