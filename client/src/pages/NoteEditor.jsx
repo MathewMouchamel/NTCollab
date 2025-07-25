@@ -50,7 +50,7 @@ export default function NoteEditor() {
         const noteData = await response.json();
         setNote(noteData);
         // Store the numeric ID for API operations
-        setNoteId(noteData.id);
+        setNoteId(noteData.uuid);
       } else {
         console.error("Failed to fetch note");
         navigate("/notes");
@@ -188,6 +188,7 @@ export default function NoteEditor() {
       saveNote(noteToSave, true);
     }, AUTO_SAVE_DELAY);
   };
+
   const handleTagsChange = (e) => {
     const tags = e.target.value
       .split(",")
