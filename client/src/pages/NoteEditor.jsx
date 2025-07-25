@@ -63,6 +63,56 @@ export default function NoteEditor() {
     }
   }, [id, user, navigate]);
 
+  const saveNote = useCallback(
+    async (noteToSave, isPartialUpdate = false) => {
+      setSaveStatus("saving");
+      try {
+        const noteId =
+          currentNoteId && currentNoteId !== "new" ? currentNoteId : null;
+        const url = noteId
+          ? `${API_BASE_URL}/notes/${noteId}`
+          : `${API_BASE_URL}/notes`;
+        const method = noteId ? (isPartialUpdate ? "PATCH" : "PUT") : "POST";
+
+        const response = await fetch(url, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify(noteToSave),
+        });
+
+        if (response.ok) {
+          const savedNote = await response.json();
+          setNote(savedNote);
+          setSaveStatus("saved");
+          setHasUnsavedChanges(false);
+
+          // If this was a new note, update the current note ID and URL
+          if (!noteId || noteId === "new") {
+            // Always use the numeric ID for future operations
+            setCurrentNoteId(savedNote.id);
+            // Update the URL to use UUID for user-friendly URLs, but keep numeric ID for operations
+            const displayId = savedNote.uuid || savedNote.id;
+            window.history.replaceState(null, "", `/notes/${displayId}`);
+          }
+
+          // Clear saved status after 2 seconds
+          setTimeout(() => setSaveStatus("idle"), 2000);
+        } else {
+          setSaveStatus("error");
+          setTimeout(() => setSaveStatus("idle"), 3000);
+        }
+      } catch (error) {
+        console.error("Error saving note:", error);
+        setSaveStatus("error");
+        setTimeout(() => setSaveStatus("idle"), 3000);
+      }
+    },
+    [currentNoteId, user]
+  );
+
   // Fetch note if editing existing note
   useEffect(() => {
     if (id && id !== "new" && user) {
@@ -122,56 +172,6 @@ export default function NoteEditor() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [note, currentNoteId, saveNote]);
-
-  const saveNote = useCallback(
-    async (noteToSave, isPartialUpdate = false) => {
-      setSaveStatus("saving");
-      try {
-        const noteId =
-          currentNoteId && currentNoteId !== "new" ? currentNoteId : null;
-        const url = noteId
-          ? `${API_BASE_URL}/notes/${noteId}`
-          : `${API_BASE_URL}/notes`;
-        const method = noteId ? (isPartialUpdate ? "PATCH" : "PUT") : "POST";
-
-        const response = await fetch(url, {
-          method,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-          body: JSON.stringify(noteToSave),
-        });
-
-        if (response.ok) {
-          const savedNote = await response.json();
-          setNote(savedNote);
-          setSaveStatus("saved");
-          setHasUnsavedChanges(false);
-
-          // If this was a new note, update the current note ID and URL
-          if (!noteId || noteId === "new") {
-            // Always use the numeric ID for future operations
-            setCurrentNoteId(savedNote.id);
-            // Update the URL to use UUID for user-friendly URLs, but keep numeric ID for operations
-            const displayId = savedNote.uuid || savedNote.id;
-            window.history.replaceState(null, "", `/notes/${displayId}`);
-          }
-
-          // Clear saved status after 2 seconds
-          setTimeout(() => setSaveStatus("idle"), 2000);
-        } else {
-          setSaveStatus("error");
-          setTimeout(() => setSaveStatus("idle"), 3000);
-        }
-      } catch (error) {
-        console.error("Error saving note:", error);
-        setSaveStatus("error");
-        setTimeout(() => setSaveStatus("idle"), 3000);
-      }
-    },
-    [currentNoteId, user]
-  );
 
   const debouncedSave = useCallback(
     (content) => {
