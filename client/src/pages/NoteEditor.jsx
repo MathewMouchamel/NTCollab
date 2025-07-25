@@ -16,6 +16,7 @@ import {
   QUILL_MODULES,
   QUILL_FORMATS,
 } from "../constants";
+import UnsavedChangesModal from "../components/UnsavedChangesModal";
 
 export default function NoteEditor() {
   const { id: noteUuid } = useParams(); // id is always a UUID
@@ -31,6 +32,8 @@ export default function NoteEditor() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [noteId, setNoteId] = useState(null); // Store the numeric ID for API calls
+  const [tagInput, setTagInput] = useState(""); // For the tag input field
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const saveTimeoutRef = useRef(null);
   const quillRef = useRef(null);
 
@@ -114,12 +117,13 @@ export default function NoteEditor() {
     }
   }, [noteUuid, user, fetchNote]);
 
-  // Handle navigation warning for unsaved changes
+  // Handle navigation warning for unsaved changes (browser refresh/close)
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (hasUnsavedChanges) {
         e.preventDefault();
-        e.returnValue = "";
+        e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+        return e.returnValue;
       }
     };
 
@@ -189,28 +193,76 @@ export default function NoteEditor() {
     }, AUTO_SAVE_DELAY);
   };
 
-  const handleTagsChange = (e) => {
-    const tags = e.target.value
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
-    setNote((prev) => ({ ...prev, tags }));
+  const handleTagInputKeyDown = (e) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault();
+      const newTag = tagInput.trim();
+      
+      // Add tag if it doesn't already exist
+      if (!note.tags.includes(newTag)) {
+        const newTags = [...note.tags, newTag];
+        setNote((prev) => ({ ...prev, tags: newTags }));
+        setHasUnsavedChanges(true);
+        
+        // Save the new tags
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = setTimeout(() => {
+          const noteToSave = { tags: newTags };
+          saveNote(noteToSave, true);
+        }, AUTO_SAVE_DELAY);
+      }
+      
+      // Clear the input
+      setTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    const newTags = note.tags.filter(tag => tag !== tagToRemove);
+    setNote((prev) => ({ ...prev, tags: newTags }));
     setHasUnsavedChanges(true);
+    
+    // Save the updated tags
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-      const noteToSave = { tags };
+      const noteToSave = { tags: newTags };
       saveNote(noteToSave, true);
     }, AUTO_SAVE_DELAY);
   };
 
   const handleBackToNotes = () => {
     if (hasUnsavedChanges) {
-      const confirmLeave = window.confirm(
-        "You have unsaved changes. Are you sure you want to leave?"
-      );
-      if (!confirmLeave) return;
+      setShowUnsavedModal(true);
+    } else {
+      navigate("/notes");
     }
+  };
+
+  const handleSaveChanges = async () => {
+    // Force save all current data
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    const noteToSave = {
+      content: note.content,
+      title: note.title,
+      tags: note.tags,
+      public: note.public
+    };
+    
+    await saveNote(noteToSave, false); // Use PUT for full save
+    setShowUnsavedModal(false);
     navigate("/notes");
+  };
+
+  const handleDiscardChanges = () => {
+    setShowUnsavedModal(false);
+    navigate("/notes");
+  };
+
+  const handleCancelModal = () => {
+    setShowUnsavedModal(false);
   };
 
   const getStatusDisplay = () => {
@@ -333,13 +385,34 @@ export default function NoteEditor() {
           onChange={handleTitleChange}
           maxLength={100}
         />
-        <input
-          className="text-base border-b border-gray-300 outline-none mb-2 bg-white"
-          type="text"
-          placeholder="Tags (comma separated)"
-          value={note.tags.join(", ")}
-          onChange={handleTagsChange}
-        />
+        {/* Tag input with bubbles */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-gray-300 pb-2 mb-2">
+          {/* Existing tags as bubbles */}
+          {note.tags.map((tag, index) => (
+            <div
+              key={index}
+              className="group flex items-center bg-black text-white px-2 py-1 rounded-full text-sm hover:bg-gray-800 transition-colors duration-200"
+            >
+              <span>{tag}</span>
+              <button
+                className="ml-2 opacity-0 group-hover:opacity-100 hover:bg-white hover:text-black rounded-full w-4 h-4 flex items-center justify-center text-xs transition-all duration-200"
+                onClick={() => handleRemoveTag(tag)}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          
+          {/* Tag input field */}
+          <input
+            className="flex-1 min-w-[120px] text-base outline-none bg-white"
+            type="text"
+            placeholder="Tags (press enter when done)"
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyDown={handleTagInputKeyDown}
+          />
+        </div>
       </div>
       {/* Editor */}
       <div className="max-w-4xl mx-auto px-4 py-6">
@@ -353,6 +426,14 @@ export default function NoteEditor() {
           placeholder="Start writing your note..."
         />
       </div>
+
+      {/* Unsaved Changes Modal */}
+      <UnsavedChangesModal
+        isOpen={showUnsavedModal}
+        onSaveChanges={handleSaveChanges}
+        onDiscardChanges={handleDiscardChanges}
+        onCancel={handleCancelModal}
+      />
     </div>
   );
 }

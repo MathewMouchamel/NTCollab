@@ -10,24 +10,31 @@ export default function Notes() {
   const [notes, setNotes] = useState([]);
   const [showContent, setShowContent] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedTag, setSelectedTag] = useState(null);
+  const [selectedTags, setSelectedTags] = useState([]);
   const [allTags, setAllTags] = useState([]);
 
   const fetchNotes = useCallback(async () => {
     try {
-      let url = `${API_BASE_URL}/notes`;
-      if (selectedTag) {
-        url += `?tag=${encodeURIComponent(selectedTag)}`;
-      }
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/notes`, {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
       });
       if (response.ok) {
         const notesData = await response.json();
-        setNotes(notesData);
-        // Collect all unique tags
+        
+        // Filter notes by selected tags (if any)
+        let filteredNotes = notesData;
+        if (selectedTags.length > 0) {
+          filteredNotes = notesData.filter(note => 
+            selectedTags.every(selectedTag => 
+              note.tags && note.tags.includes(selectedTag)
+            )
+          );
+        }
+        
+        setNotes(filteredNotes);
+        // Collect all unique tags from all notes (not just filtered ones)
         const tagsSet = new Set();
         notesData.forEach((note) =>
           (note.tags || []).forEach((tag) => tagsSet.add(tag))
@@ -41,7 +48,7 @@ export default function Notes() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, selectedTag]);
+  }, [user, selectedTags]);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowContent(true), 200);
@@ -54,7 +61,7 @@ export default function Notes() {
     } else {
       setIsLoading(false);
     }
-  }, [user, selectedTag, fetchNotes]);
+  }, [user, selectedTags, fetchNotes]);
 
   const handleCreateNewNote = useCallback(async () => {
     try {
@@ -87,20 +94,21 @@ export default function Notes() {
     [navigate]
   );
 
-  const getPreviewText = useCallback((content) => {
-    // Strip HTML tags and get first 100 characters
-    const textContent = content.replace(/<[^>]*>/g, "");
-    return textContent.length > 100
-      ? textContent.substring(0, 100) + "..."
-      : textContent;
+
+  const handleTagClick = useCallback((tag) => {
+    setSelectedTags(prev => {
+      if (prev.includes(tag)) {
+        // Remove tag if already selected
+        return prev.filter(t => t !== tag);
+      } else {
+        // Add tag if not selected
+        return [...prev, tag];
+      }
+    });
   }, []);
 
-  const formatDate = useCallback((dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+  const clearAllTags = useCallback(() => {
+    setSelectedTags([]);
   }, []);
 
   const handleSignIn = async () => {
@@ -167,30 +175,38 @@ export default function Notes() {
           {/* Tag filter UI */}
           {allTags.length > 0 && (
             <div className="mb-6 flex flex-wrap gap-2 max-w-4xl mx-auto">
-              <span className="font-semibold mr-2">Filter by tag:</span>
-              <button
-                className={`px-3 py-1 rounded border-2 border-black hover:bg-black hover:text-white ${
-                  selectedTag === null
-                    ? "bg-black text-white"
-                    : "bg-white text-black"
-                } cursor-pointer`}
-                onClick={() => setSelectedTag(null)}
-              >
-                All
-              </button>
-              {allTags.map((tag) => (
+              <span className="font-semibold mr-2">Filter by tags:</span>
+              {selectedTags.length > 0 && (
                 <button
-                  key={tag}
-                  className={`px-3 py-1 rounded border-2 border-black hover:bg-black hover:text-white ${
-                    selectedTag === tag
-                      ? "bg-black text-white"
-                      : "bg-white text-black"
-                  } cursor-pointer`}
-                  onClick={() => setSelectedTag(tag)}
+                  className="px-3 py-1 rounded border-2 border-black bg-gray-100 text-black hover:bg-black hover:text-white cursor-pointer"
+                  onClick={clearAllTags}
                 >
-                  {tag}
+                  Clear All
                 </button>
-              ))}
+              )}
+              {allTags.map((tag) => {
+                const isSelected = selectedTags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    className={`group relative px-3 py-1 rounded border-2 border-black hover:bg-black hover:text-white ${
+                      isSelected
+                        ? "bg-black text-white"
+                        : "bg-white text-black"
+                    } cursor-pointer transition-colors duration-200`}
+                    onClick={() => handleTagClick(tag)}
+                  >
+                    <span className={isSelected ? "" : "group-hover:pr-5 transition-all duration-200"}>
+                      {tag}
+                    </span>
+                    {isSelected && (
+                      <span className="ml-2 hover:bg-white hover:text-black rounded-full w-4 h-4 inline-flex items-center justify-center text-xs transition-colors duration-200">
+                        ×
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
 
