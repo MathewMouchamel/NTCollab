@@ -141,7 +141,7 @@ export default function NoteEditor() {
         if (saveTimeoutRef.current) {
           clearTimeout(saveTimeoutRef.current);
         }
-        const noteToSave = { content: note.content };
+        const noteToSave = note;
         saveNote(noteToSave, true);
       }
     };

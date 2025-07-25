@@ -186,16 +186,12 @@ router.patch("/:id", verifyFirebaseToken, async (req, res) => {
     const { id } = req.params;
     const updateFields = {};
 
-    // Only include fields that are provided in the request
-    if (req.body.content !== undefined) updateFields.content = req.body.content;
-    if (req.body.tags !== undefined) updateFields.tags = req.body.tags;
-    if (req.body.public !== undefined) updateFields.public = req.body.public;
-    if (req.body.title !== undefined) updateFields.title = req.body.title;
-
-    // Validate that we have something to update
-    if (Object.keys(updateFields).length === 0) {
-      return res.status(400).json({ error: "No fields to update" });
-    }
+    // Include all fields that are provided in the update request
+    updateFields.content = req.body.content;
+    updateFields.tags = req.body.tags;
+    updateFields.public = req.body.public;
+    updateFields.title = req.body.title;
+    console.log(req.body);
 
     // Only owner can update
     let fetchQuery = supabase.from("notes").select("*");
