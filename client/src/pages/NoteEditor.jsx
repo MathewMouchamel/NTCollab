@@ -302,7 +302,7 @@ export default function NoteEditor() {
           <div className="flex items-center">
             <button
               onClick={handleBackToNotes}
-              className="flex items-center text-gray-600 hover:text-black transition-colors mr-4"
+              className="flex items-center text-gray-600 hover:text-black transition-colors mr-4 cursor-pointer"
             >
               <svg
                 className="h-5 w-5 mr-2"
