@@ -173,7 +173,7 @@ export default function Notes() {
                   selectedTag === null
                     ? "bg-black text-white"
                     : "bg-gray-200 text-black"
-                }`}
+                } cursor-pointer`}
                 onClick={() => setSelectedTag(null)}
               >
                 All
