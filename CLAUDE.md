@@ -81,4 +81,7 @@ Either use `server/serviceAccountKey.json` or environment variables for Firebase
 - Notes support both UUID and numeric ID lookups for backward compatibility
 - Rich text editor uses Quill.js via react-quill
 - Last opened timestamps tracked for note ordering
-- Auto-save functionality via PATCH endpoint
+- Auto-save functionality via PATCH endpoint with 1-second debouncing
+- Configuration constants centralized in `client/src/constants.js`
+- Components optimized with React.memo, useCallback, and useMemo for performance
+- Server middleware available for error handling and validation

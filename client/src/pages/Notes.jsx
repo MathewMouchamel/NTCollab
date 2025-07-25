@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../AuthContext";
 import { signInWithGoogle } from "../firebase";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../constants";
 
 export default function Notes() {
   const { user, setUser } = useAuth();
@@ -23,11 +24,11 @@ export default function Notes() {
     } else {
       setIsLoading(false);
     }
-  }, [user, selectedTag]);
+  }, [user, selectedTag, fetchNotes]);
 
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     try {
-      let url = "http://localhost:3000/api/notes";
+      let url = `${API_BASE_URL}/notes`;
       if (selectedTag) {
         url += `?tag=${encodeURIComponent(selectedTag)}`;
       }
@@ -51,31 +52,31 @@ export default function Notes() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, selectedTag]);
 
-  const handleCreateNewNote = () => {
+  const handleCreateNewNote = useCallback(() => {
     navigate("/notes/new");
-  };
+  }, [navigate]);
 
-  const handleNoteClick = (note) => {
+  const handleNoteClick = useCallback((note) => {
     // Use UUID if available, otherwise fall back to id
     const noteId = note.uuid || note.id;
     navigate(`/notes/${noteId}`);
-  };
+  }, [navigate]);
 
-  const getPreviewText = (content) => {
+  const getPreviewText = useCallback((content) => {
     // Strip HTML tags and get first 100 characters
     const textContent = content.replace(/<[^>]*>/g, "");
     return textContent.length > 100 ? textContent.substring(0, 100) + "..." : textContent;
-  };
+  }, []);
 
-  const formatDate = (dateString) => {
+  const formatDate = useCallback((dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
-  };
+  }, []);
 
   const handleSignIn = async () => {
     try {
@@ -235,7 +236,7 @@ export default function Notes() {
                         {note.tags.map((tag, index) => (
                           <span
                             key={index}
-                            className="text-xs bg-gray-200 text-black px-2 py-1 rounded"
+                            className="text-xs bg-white text-black px-2 py-1 rounded-full border border-black"
                           >
                             {tag}
                           </span>

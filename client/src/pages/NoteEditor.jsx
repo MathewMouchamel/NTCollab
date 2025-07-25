@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "../styles/quill-custom.css";
+import { API_BASE_URL, AUTO_SAVE_DELAY, QUILL_MODULES, QUILL_FORMATS } from "../constants";
 
 export default function NoteEditor() {
   const { id } = useParams();
@@ -17,30 +18,9 @@ export default function NoteEditor() {
   const saveTimeoutRef = useRef(null);
   const quillRef = useRef(null);
 
-  // Quill configuration
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ["bold", "italic", "underline", "strike"],
-      [{ list: "ordered" }, { list: "bullet" }],
-      ["blockquote", "code-block"],
-      ["link"],
-      ["clean"],
-    ],
-  };
-
-  const formats = [
-    "header",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "list",
-    "bullet",
-    "blockquote",
-    "code-block",
-    "link",
-  ];
+  // Memoize Quill configuration to prevent unnecessary re-renders
+  const modules = useMemo(() => QUILL_MODULES, []);
+  const formats = useMemo(() => QUILL_FORMATS, []);
 
   // Fetch note if editing existing note
   useEffect(() => {
@@ -56,7 +36,7 @@ export default function NoteEditor() {
         }
       }, 100);
     }
-  }, [id, user]);
+  }, [id, user, fetchNote]);
 
   // Handle navigation warning for unsaved changes
   useEffect(() => {
@@ -96,11 +76,11 @@ export default function NoteEditor() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [note, currentNoteId]);
+  }, [note, currentNoteId, saveNote]);
 
-  const fetchNote = async () => {
+  const fetchNote = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/notes/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
@@ -109,6 +89,7 @@ export default function NoteEditor() {
       if (response.ok) {
         const noteData = await response.json();
         setNote(noteData);
+        // Always use the numeric ID for operations, not the UUID
         setCurrentNoteId(noteData.id);
       } else {
         console.error("Failed to fetch note");
@@ -120,15 +101,15 @@ export default function NoteEditor() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id, user, navigate]);
 
-  const saveNote = async (noteToSave, isPartialUpdate = false) => {
+  const saveNote = useCallback(async (noteToSave, isPartialUpdate = false) => {
     setSaveStatus("saving");
     try {
       const noteId = currentNoteId && currentNoteId !== "new" ? currentNoteId : null;
       const url = noteId
-        ? `http://localhost:3000/api/notes/${noteId}`
-        : `http://localhost:3000/api/notes`;
+        ? `${API_BASE_URL}/notes/${noteId}`
+        : `${API_BASE_URL}/notes`;
       const method = noteId ? (isPartialUpdate ? "PATCH" : "PUT") : "POST";
 
       const response = await fetch(url, {
@@ -146,11 +127,13 @@ export default function NoteEditor() {
         setSaveStatus("saved");
         setHasUnsavedChanges(false);
 
-        // If this was a new note, update the current note ID but don't navigate
+        // If this was a new note, update the current note ID and URL
         if (!noteId || noteId === "new") {
+          // Always use the numeric ID for future operations
           setCurrentNoteId(savedNote.id);
-          // Update the URL without navigating (replace history state)
-          window.history.replaceState(null, "", `/notes/${savedNote.id}`);
+          // Update the URL to use UUID for user-friendly URLs, but keep numeric ID for operations
+          const displayId = savedNote.uuid || savedNote.id;
+          window.history.replaceState(null, "", `/notes/${displayId}`);
         }
 
         // Clear saved status after 2 seconds
@@ -164,7 +147,7 @@ export default function NoteEditor() {
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
-  };
+  }, [currentNoteId, user]);
 
   const debouncedSave = useCallback((content) => {
     setHasUnsavedChanges(true);
@@ -176,8 +159,8 @@ export default function NoteEditor() {
         ? { content } // Use PATCH for existing notes (partial update)
         : { content, tags: note.tags, public: note.public }; // Use POST for new notes (full data)
       saveNote(noteToSave, currentNoteId && currentNoteId !== "new" ? true : false);
-    }, 1000); // Save after 1 second of inactivity
-  }, [currentNoteId, note.tags, note.public]);
+    }, AUTO_SAVE_DELAY);
+  }, [currentNoteId, note.tags, note.public, saveNote]);
 
   const handleContentChange = useCallback((content) => {
     // Validate content to prevent empty saves
