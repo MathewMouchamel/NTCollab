@@ -177,7 +177,7 @@ export default function Notes() {
               <span className="font-semibold mr-2">Filter by tags:</span>
               {selectedTags.length > 0 && (
                 <button
-                  className="px-3 py-1 rounded-full border-2 border-black bg-gray-100 text-black hover:bg-black hover:text-white cursor-pointer"
+                  className="px-3 py-1 rounded-full border-2 border-black bg-red-500 text-white hover:bg-red-400 cursor-pointer"
                   onClick={clearAllTags}
                 >
                   Clear All
