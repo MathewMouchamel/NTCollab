@@ -22,17 +22,17 @@ export default function Notes() {
       });
       if (response.ok) {
         const notesData = await response.json();
-        
+
         // Filter notes by selected tags (if any)
         let filteredNotes = notesData;
         if (selectedTags.length > 0) {
-          filteredNotes = notesData.filter(note => 
-            selectedTags.every(selectedTag => 
-              note.tags && note.tags.includes(selectedTag)
+          filteredNotes = notesData.filter((note) =>
+            selectedTags.every(
+              (selectedTag) => note.tags && note.tags.includes(selectedTag)
             )
           );
         }
-        
+
         setNotes(filteredNotes);
         // Collect all unique tags from all notes (not just filtered ones)
         const tagsSet = new Set();
@@ -94,12 +94,11 @@ export default function Notes() {
     [navigate]
   );
 
-
   const handleTagClick = useCallback((tag) => {
-    setSelectedTags(prev => {
+    setSelectedTags((prev) => {
       if (prev.includes(tag)) {
         // Remove tag if already selected
-        return prev.filter(t => t !== tag);
+        return prev.filter((t) => t !== tag);
       } else {
         // Add tag if not selected
         return [...prev, tag];
@@ -191,19 +190,14 @@ export default function Notes() {
                     key={tag}
                     className={`group relative px-3 py-1 rounded border-2 border-black hover:bg-black hover:text-white ${
                       isSelected
-                        ? "bg-black text-white"
+                        ? "bg-black text-white hover:line-through decoration-2"
                         : "bg-white text-black"
                     } cursor-pointer transition-colors duration-200`}
                     onClick={() => handleTagClick(tag)}
                   >
-                    <span className={isSelected ? "" : "group-hover:pr-5 transition-all duration-200"}>
+                    <span className="block w-full text-center transition-colors duration-200">
                       {tag}
                     </span>
-                    {isSelected && (
-                      <span className="ml-2 hover:bg-white hover:text-black rounded-full w-4 h-4 inline-flex items-center justify-center text-xs transition-colors duration-200">
-                        ×
-                      </span>
-                    )}
                   </button>
                 );
               })}
