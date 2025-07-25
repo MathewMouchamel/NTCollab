@@ -429,12 +429,7 @@ export default function NoteEditor() {
       </div>
 
       {/* Unsaved Changes Modal */}
-      <UnsavedChangesModal
-        isOpen={showUnsavedModal}
-        onSaveChanges={handleSaveChanges}
-        onDiscardChanges={handleDiscardChanges}
-        onCancel={handleCancelModal}
-      />
+      {showUnsavedModal && <UnsavedChangesModal saveNote={handleSaveChanges} />}
     </div>
   );
 }
