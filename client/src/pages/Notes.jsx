@@ -245,7 +245,7 @@ export default function Notes() {
                   <div
                     key={note.id}
                     onClick={() => handleNoteClick(note)}
-                    className="p-4 border-2 border-black rounded-lg hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer bg-white"
+                    className="p-4 border-2 border-black rounded-lg hover:bg-black hover:text-white transition-colors duration-200 cursor-pointer bg-white group"
                   >
                     {/* Show only the title */}
                     <div className="text-xl font-semibold mb-2">
@@ -257,7 +257,7 @@ export default function Notes() {
                         {note.tags.map((tag, index) => (
                           <span
                             key={index}
-                            className="text-xs bg-white text-black px-2 py-1 rounded-full border border-black"
+                            className="text-xs bg-white text-black px-2 py-1 rounded-full border border-black group-hover:bg-black group-hover:text-white group-hover:border-white transition-colors duration-200"
                           >
                             {tag}
                           </span>
