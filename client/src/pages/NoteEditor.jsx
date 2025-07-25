@@ -30,7 +30,7 @@ export default function NoteEditor() {
   const [saveStatus, setSaveStatus] = useState("idle"); // idle, saving, saved, error
   const [isLoading, setIsLoading] = useState(true);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [currentNoteId, setCurrentNoteId] = useState(id);
+  const [currentNoteId, setCurrentNoteId] = useState(id === "new" ? "new" : null);
   const saveTimeoutRef = useRef(null);
   const quillRef = useRef(null);
 
