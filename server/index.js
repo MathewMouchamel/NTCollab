@@ -191,7 +191,6 @@ router.patch("/:id", verifyFirebaseToken, async (req, res) => {
     updateFields.tags = req.body.tags;
     updateFields.public = req.body.public;
     updateFields.title = req.body.title;
-    console.log(req.body);
 
     // Only owner can update
     let fetchQuery = supabase.from("notes").select("*");
