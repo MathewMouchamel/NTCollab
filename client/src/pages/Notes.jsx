@@ -169,10 +169,10 @@ export default function Notes() {
             <div className="mb-6 flex flex-wrap gap-2 max-w-4xl mx-auto">
               <span className="font-semibold mr-2">Filter by tag:</span>
               <button
-                className={`px-3 py-1 rounded ${
+                className={`px-3 py-1 rounded border-2 border-black hover:bg-black hover:text-white ${
                   selectedTag === null
                     ? "bg-black text-white"
-                    : "bg-gray-200 text-black"
+                    : "bg-white text-black"
                 } cursor-pointer`}
                 onClick={() => setSelectedTag(null)}
               >
@@ -181,10 +181,10 @@ export default function Notes() {
               {allTags.map((tag) => (
                 <button
                   key={tag}
-                  className={`px-3 py-1 rounded ${
+                  className={`px-3 py-1 rounded border-2 border-black hover:bg-black hover:text-white ${
                     selectedTag === tag
                       ? "bg-black text-white"
-                      : "bg-gray-200 text-black"
+                      : "bg-white text-black"
                   } cursor-pointer`}
                   onClick={() => setSelectedTag(tag)}
                 >
