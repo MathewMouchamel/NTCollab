@@ -205,7 +205,7 @@ export default function Notes() {
           </div>
 
           {/* Search Input */}
-          <div className="mb-6 max-w-4xl mx-auto">
+          <div className="mb-6 w-75 mx-auto">
             <div className="relative">
               <input
                 type="text"
