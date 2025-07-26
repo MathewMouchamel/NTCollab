@@ -469,7 +469,7 @@ export default function NoteEditor() {
       {/* Title and Tags */}
       <div className="max-w-4xl mx-auto px-4 pt-6 flex flex-col gap-4">
         <input
-          className="text-2xl font-bold border-b-2 border-black outline-none mb-2 bg-white"
+          className="text-2xl font-bold border-none border-black outline-none mb-2 bg-white underline underline-offset-4 decoration-4"
           type="text"
           placeholder="Title"
           value={note.title}
@@ -477,7 +477,7 @@ export default function NoteEditor() {
           maxLength={100}
         />
         {/* Tag input with bubbles */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-gray-300 pb-2 mb-2">
+        <div className="flex flex-wrap items-center gap-2 pb-2 mb-2">
           {/* Existing tags as bubbles */}
           {note.tags.map((tag, index) => (
             <button
@@ -496,9 +496,9 @@ export default function NoteEditor() {
 
           {/* Tag input field */}
           <input
-            className="flex-1 min-w-[120px] text-base outline-none bg-white"
+            className="ml-3 flex-1 min-w-[120px] text-base outline-none bg-white"
             type="text"
-            placeholder="Tags (press enter when done)"
+            placeholder="Add"
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             onKeyDown={handleTagInputKeyDown}
