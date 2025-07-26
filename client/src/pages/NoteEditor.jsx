@@ -498,7 +498,7 @@ export default function NoteEditor() {
           <input
             className="ml-3 flex-1 min-w-[120px] text-base outline-none bg-white"
             type="text"
-            placeholder="Add"
+            placeholder="Tags"
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             onKeyDown={handleTagInputKeyDown}
