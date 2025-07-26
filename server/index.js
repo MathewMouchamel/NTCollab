@@ -3,7 +3,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { verifyFirebaseToken } from "./verifyFirebaseToken.js";
-import { createClient } from "@supabase/supabase-js";
 import supabase from "./supabaseClient.js";
 import { setupWebSocketServer } from "./websocketServer.js";
 
