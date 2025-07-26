@@ -3,6 +3,7 @@ import { useAuth } from "../AuthContext";
 import { signInWithGoogle } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../constants";
+import ProfileDropdown from "../components/ProfileDropdown";
 
 export default function Notes() {
   const { user, setUser } = useAuth();
@@ -12,8 +13,11 @@ export default function Notes() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTags, setSelectedTags] = useState([]);
   const [allTags, setAllTags] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchNotes = useCallback(async () => {
+    if (!user?.token) return;
+    
     try {
       const response = await fetch(`${API_BASE_URL}/notes`, {
         headers: {
@@ -23,13 +27,22 @@ export default function Notes() {
       if (response.ok) {
         const notesData = await response.json();
 
-        // Filter notes by selected tags (if any)
+        // Filter notes by selected tags and search query
         let filteredNotes = notesData;
+        
+        // Filter by tags
         if (selectedTags.length > 0) {
-          filteredNotes = notesData.filter((note) =>
+          filteredNotes = filteredNotes.filter((note) =>
             selectedTags.every(
               (selectedTag) => note.tags && note.tags.includes(selectedTag)
             )
+          );
+        }
+        
+        // Filter by search query (case-insensitive)
+        if (searchQuery.trim()) {
+          filteredNotes = filteredNotes.filter((note) => 
+            note.title && note.title.toLowerCase().includes(searchQuery.toLowerCase())
           );
         }
 
@@ -48,7 +61,7 @@ export default function Notes() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, selectedTags]);
+  }, [user, selectedTags, searchQuery]);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowContent(true), 200);
@@ -61,9 +74,11 @@ export default function Notes() {
     } else {
       setIsLoading(false);
     }
-  }, [user, selectedTags, fetchNotes]);
+  }, [user, selectedTags, searchQuery, fetchNotes]);
 
   const handleCreateNewNote = useCallback(async () => {
+    if (!user?.token) return;
+    
     try {
       const response = await fetch(`${API_BASE_URL}/notes/blank`, {
         method: "POST",
@@ -87,6 +102,8 @@ export default function Notes() {
 
   const handleNoteClick = useCallback(
     async (note) => {
+      if (!user?.token) return;
+      
       // Use UUID
       const noteId = note.uuid;
 
@@ -101,7 +118,7 @@ export default function Notes() {
 
       navigate(`/notes/${noteId}`);
     },
-    [navigate]
+    [navigate, user?.token]
   );
 
   const handleTagClick = useCallback((tag) => {
@@ -161,25 +178,28 @@ export default function Notes() {
         <div className="min-h-screen bg-white text-black flex flex-col py-12 px-4">
           <div className="flex items-center justify-between max-w-4xl mx-auto w-full mb-8">
             <h1 className="text-4xl font-bold tracking-tight">Notes</h1>
-            <button
-              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg cursor-pointer"
-              aria-label="Create new note"
-              onClick={handleCreateNewNote}
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            <div className="flex items-center space-x-4">
+              <button
+                className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-black bg-white hover:bg-black hover:text-white transition-colors duration-200 shadow-lg cursor-pointer"
+                aria-label="Create new note"
+                onClick={handleCreateNewNote}
               >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-            </button>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+              <ProfileDropdown />
+            </div>
           </div>
           {/* Tag filter UI */}
           {allTags.length > 0 && (
@@ -213,6 +233,32 @@ export default function Notes() {
               })}
             </div>
           )}
+
+          {/* Search Input */}
+          <div className="mb-6 max-w-4xl mx-auto">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search notes by title..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-black rounded-lg text-black placeholder-gray-500 focus:outline-none focus:border-gray-700 transition-colors duration-200"
+              />
+              <svg
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+          </div>
 
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center">

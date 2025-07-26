@@ -109,3 +109,78 @@ All notes in NoteEditor are existing notes with UUIDs:
 6. All saves use PATCH/PUT operations on existing note
 
 This eliminates the complexity of handling "new" vs "existing" notes in the editor.
+
+1.  User Profile Dropdown with Avatar & Logout ✅
+
+- ProfileDropdown.jsx: Created dropdown component with
+  user avatar and logout functionality
+- Shows user's Google avatar with black border matching
+  the plus button
+- Displays user email on hover and provides logout
+  option
+- Redirects to homepage after logout for signing into
+  different account
+
+2. Public/Private Toggle & Delete Note Options ✅
+
+- NoteEditor Header: Added toggle button for
+  public/private status (green when public, gray when
+  private)
+- Delete Button: Red delete button with confirmation
+  modal
+- DeleteNoteModal.jsx: Custom modal matching site
+  design for delete confirmation
+- Auto-saves public/private status changes
+
+3. Search Functionality ✅
+
+- Search Input: Added below tag filtering section with
+  search icon
+- Case-insensitive Search: Searches note titles (e.g.,
+  "he" finds "Hey" and "Hello")
+- Real-time Filtering: Updates results as you type
+- Combined Filtering: Works together with tag filtering
+
+4. Real-time Collaborative Editing ✅
+
+- WebSocket Server: Set up WebSocket infrastructure on
+  port 3000 with /collaboration path
+- Yjs Integration: Implemented collaborative document
+  editing using Y.js
+- Live Indicator: Shows "Live" status when connected to
+  collaborative session
+- Smart Auto-save: Disables auto-save during
+  collaborative sessions to prevent conflicts
+- useCollaborativeEditor Hook: Custom hook for managing
+  collaborative editing state
+
+Key Technical Implementations:
+
+Backend Changes:
+
+- Added WebSocket server with Y.js integration
+- Installed ws, y-websocket, and yjs packages
+- Modified server to use HTTP server for WebSocket
+  support
+
+Frontend Changes:
+
+- Installed yjs, y-websocket, and y-quill packages
+- Created custom hook for collaborative editing
+- Updated NoteEditor to support real-time collaboration
+- Added profile management and note controls
+
+How Real-time Collaboration Works:
+
+1. Multiple users can open the same note by its UUID
+2. WebSocket connection established to /collaboration
+   endpoint
+3. Y.js synchronizes changes between all connected
+   clients
+4. Shows "Live" indicator when collaborative session is
+   active
+5. Changes appear instantly across all connected users
+
+All features maintain your black/white design aesthetic
+and provide a professional, Google Docs-like
+collaborative experience!

@@ -17,6 +17,8 @@ import {
   QUILL_FORMATS,
 } from "../constants";
 import UnsavedChangesModal from "../components/UnsavedChangesModal";
+import DeleteNoteModal from "../components/DeleteNoteModal";
+import { useCollaborativeEditor } from "../hooks/useCollaborativeEditor";
 
 export default function NoteEditor() {
   const { id: noteUuid } = useParams(); // id is always a UUID
@@ -34,12 +36,26 @@ export default function NoteEditor() {
   const [noteId, setNoteId] = useState(null); // Store the numeric ID for API calls
   const [tagInput, setTagInput] = useState(""); // For the tag input field
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const saveTimeoutRef = useRef(null);
   const quillRef = useRef(null);
 
   // Memoize Quill configuration to prevent unnecessary re-renders
   const modules = useMemo(() => QUILL_MODULES, []);
   const formats = useMemo(() => QUILL_FORMATS, []);
+
+  // Collaborative editing handler
+  const handleCollaborativeContentChange = useCallback((content) => {
+    // Update local state without triggering auto-save during collaborative changes
+    setNote((prev) => ({ ...prev, content }));
+  }, []);
+
+  // Setup collaborative editing
+  const { provider } = useCollaborativeEditor(
+    noteUuid, 
+    quillRef, 
+    handleCollaborativeContentChange
+  );
 
   const fetchNote = useCallback(async () => {
     try {
@@ -178,9 +194,12 @@ export default function NoteEditor() {
         content = "";
       }
       setNote((prev) => ({ ...prev, content }));
-      debouncedSave(content);
+      // Only auto-save if we're not in a collaborative session or this is a manual save
+      if (!provider || !provider.wsconnected) {
+        debouncedSave(content);
+      }
     },
-    [debouncedSave]
+    [debouncedSave, provider]
   );
 
   const handleTitleChange = (e) => {
@@ -257,13 +276,45 @@ export default function NoteEditor() {
     navigate("/notes");
   };
 
-  const handleDiscardChanges = () => {
-    setShowUnsavedModal(false);
-    navigate("/notes");
+
+  const handlePublicToggle = () => {
+    const newPublicStatus = !note.public;
+    setNote((prev) => ({ ...prev, public: newPublicStatus }));
+    setHasUnsavedChanges(true);
+    
+    // Save the updated public status
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      const noteToSave = { public: newPublicStatus };
+      saveNote(noteToSave, true);
+    }, AUTO_SAVE_DELAY);
   };
 
-  const handleCancelModal = () => {
-    setShowUnsavedModal(false);
+  const handleDeleteNote = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/notes/${noteUuid}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      if (response.ok) {
+        navigate("/notes");
+      } else {
+        console.error("Failed to delete note");
+      }
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
   };
 
   const getStatusDisplay = () => {
@@ -373,7 +424,47 @@ export default function NoteEditor() {
               Back to Notes
             </button>
           </div>
-          <div className="text-sm">{getStatusDisplay()}</div>
+          <div className="flex items-center space-x-4">
+            <div className="text-sm flex items-center space-x-2">
+              {getStatusDisplay()}
+              {provider && provider.wsconnected && (
+                <span className="text-green-600 flex items-center">
+                  <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Live
+                </span>
+              )}
+            </div>
+            {/* Note controls */}
+            <div className="flex items-center space-x-2">
+              {/* Public/Private Toggle */}
+              <button
+                onClick={handlePublicToggle}
+                className={`px-3 py-1 text-xs rounded border-2 transition-colors duration-200 ${
+                  note.public
+                    ? "bg-green-500 text-white border-green-500 hover:bg-green-600"
+                    : "bg-gray-200 text-black border-gray-300 hover:bg-gray-300"
+                }`}
+                title={note.public ? "Note is public" : "Note is private"}
+              >
+                {note.public ? "Public" : "Private"}
+              </button>
+              
+              {/* Delete Button */}
+              <button
+                onClick={handleDeleteConfirm}
+                className="px-3 py-1 text-xs rounded border-2 border-red-500 bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
+                title="Delete note"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       {/* Title and Tags */}
@@ -430,6 +521,14 @@ export default function NoteEditor() {
 
       {/* Unsaved Changes Modal */}
       {showUnsavedModal && <UnsavedChangesModal saveNote={handleSaveChanges} />}
+      
+      {/* Delete Confirmation Modal */}
+      <DeleteNoteModal
+        isOpen={showDeleteModal}
+        onDelete={handleDeleteNote}
+        onCancel={handleDeleteCancel}
+        noteTitle={note.title}
+      />
     </div>
   );
 }

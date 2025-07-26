@@ -1,9 +1,11 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { createServer } from "http";
 import { verifyFirebaseToken } from "./verifyFirebaseToken.js";
 import { createClient } from "@supabase/supabase-js";
 import supabase from "./supabaseClient.js";
+import { setupWebSocketServer } from "./websocketServer.js";
 
 dotenv.config();
 
@@ -249,8 +251,13 @@ router.delete("/:id", verifyFirebaseToken, async (req, res) => {
 
 app.use("/api/notes", router);
 
-app.listen(PORT, () => {
+// Create HTTP server and setup WebSocket
+const server = createServer(app);
+setupWebSocketServer(server);
+
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(`WebSocket server is running on port ${PORT}`);
   console.log(`CORS enabled for: http://localhost:5173`);
   console.log(
     `Supabase URL: ${
