@@ -52,8 +52,8 @@ export default function NoteEditor() {
 
   // Setup collaborative editing
   const { provider } = useCollaborativeEditor(
-    noteUuid, 
-    quillRef, 
+    noteUuid,
+    quillRef,
     handleCollaborativeContentChange
   );
 
@@ -276,12 +276,11 @@ export default function NoteEditor() {
     navigate("/notes");
   };
 
-
   const handlePublicToggle = () => {
     const newPublicStatus = !note.public;
     setNote((prev) => ({ ...prev, public: newPublicStatus }));
     setHasUnsavedChanges(true);
-    
+
     // Save the updated public status
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
@@ -429,7 +428,11 @@ export default function NoteEditor() {
               {getStatusDisplay()}
               {provider && provider.wsconnected && (
                 <span className="text-green-600 flex items-center">
-                  <svg className="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    className="h-4 w-4 mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
                     <path
                       fillRule="evenodd"
                       d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"
@@ -445,20 +448,16 @@ export default function NoteEditor() {
               {/* Public/Private Toggle */}
               <button
                 onClick={handlePublicToggle}
-                className={`px-3 py-1 text-xs rounded border-2 transition-colors duration-200 ${
-                  note.public
-                    ? "bg-green-500 text-white border-green-500 hover:bg-green-600"
-                    : "bg-gray-200 text-black border-gray-300 hover:bg-gray-300"
-                }`}
+                className={`px-3 py-1 text-xs rounded border-2 transition-colors duration-200 bg-black text-white border-black hover:bg-gray-700 cursor-pointer`}
                 title={note.public ? "Note is public" : "Note is private"}
               >
                 {note.public ? "Public" : "Private"}
               </button>
-              
+
               {/* Delete Button */}
               <button
                 onClick={handleDeleteConfirm}
-                className="px-3 py-1 text-xs rounded border-2 border-red-500 bg-red-500 text-white hover:bg-red-600 transition-colors duration-200"
+                className="px-3 py-1 text-xs rounded border-2 border-black bg-red-500 text-white hover:bg-red-800 transition-colors duration-200 cursor-pointer"
                 title="Delete note"
               >
                 Delete
@@ -521,7 +520,7 @@ export default function NoteEditor() {
 
       {/* Unsaved Changes Modal */}
       {showUnsavedModal && <UnsavedChangesModal saveNote={handleSaveChanges} />}
-      
+
       {/* Delete Confirmation Modal */}
       <DeleteNoteModal
         isOpen={showDeleteModal}
