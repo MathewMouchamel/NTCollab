@@ -141,11 +141,13 @@ router.get("/:id", verifyFirebaseToken, async (req, res) => {
   }
 
   // Update last_opened timestamp
-  await supabase
-    .from("notes")
-    .update({ last_opened: new Date().toISOString() })
-    .eq("id", data.id);
-  res.json({ ...data, last_opened: new Date().toISOString() });
+  if (req.user === data.owner_uid) {
+    await supabase
+      .from("notes")
+      .update({ last_opened: new Date().toISOString() })
+      .eq("id", data.id);
+  }
+  res.json({ ...data });
 });
 
 // PUT /api/notes/:id (update note)
