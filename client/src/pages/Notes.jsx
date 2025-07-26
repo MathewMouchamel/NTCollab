@@ -235,7 +235,7 @@ export default function Notes() {
             <div className="mb-6 flex flex-wrap gap-2 max-w-4xl mx-auto">
               {selectedTags.length > 0 && (
                 <button
-                  className="px-3 py-1 rounded-full border-2 border-black bg-red-500 text-white hover:bg-red-400 cursor-pointer"
+                  className="px-3 py-1 rounded-full border-2 border-black bg-red-500 text-white hover:bg-red-800 cursor-pointer"
                   onClick={clearAllTags}
                 >
                   Clear All
