@@ -182,15 +182,16 @@ router.put("/:id", verifyFirebaseToken, async (req, res) => {
 // PATCH /api/notes/:id (partial update for auto-save)
 router.patch("/:id", verifyFirebaseToken, async (req, res) => {
   try {
-    console.log(req.params);
     const { id } = req.params;
     const updateFields = {};
 
     // Include all fields that are provided in the update request
-    updateFields.content = req.body.content;
-    updateFields.tags = req.body.tags;
-    updateFields.public = req.body.public;
-    updateFields.title = req.body.title;
+    if (req.body.content !== undefined) updateFields.content = req.body.content;
+    if (req.body.tags !== undefined) updateFields.tags = req.body.tags;
+    if (req.body.public !== undefined) updateFields.public = req.body.public;
+    if (req.body.title !== undefined) updateFields.title = req.body.title;
+    if (req.body.last_opened !== undefined)
+      updateFields.last_opened = req.body.last_opened;
 
     // Only owner can update
     let fetchQuery = supabase.from("notes").select("*");

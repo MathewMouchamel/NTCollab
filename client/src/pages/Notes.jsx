@@ -86,9 +86,19 @@ export default function Notes() {
   }, [navigate, user]);
 
   const handleNoteClick = useCallback(
-    (note) => {
-      // Use UUID if available, otherwise fall back to id
-      const noteId = note.uuid || note.id;
+    async (note) => {
+      // Use UUID
+      const noteId = note.uuid;
+
+      await fetch(`${API_BASE_URL}/notes/${noteId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({ last_opened: new Date().toISOString() }),
+      });
+
       navigate(`/notes/${noteId}`);
     },
     [navigate]
