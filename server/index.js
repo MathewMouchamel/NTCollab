@@ -228,23 +228,16 @@ router.patch("/:id", verifyFirebaseToken, async (req, res) => {
 router.delete("/:id", verifyFirebaseToken, async (req, res) => {
   const { id } = req.params;
 
-  // Check if the id looks like a UUID or is a number
-  const isUUID = id.includes("-");
-
   // Only owner can delete
   let fetchQuery = supabase.from("notes").select("*");
-  if (isUUID) {
-    fetchQuery = fetchQuery.eq("uuid", id);
-  } else {
-    fetchQuery = fetchQuery.eq("id", id);
-  }
+  fetchQuery = fetchQuery.eq("uuid", id);
 
   const { data: note, error: fetchError } = await fetchQuery.single();
   if (fetchError || !note)
     return res.status(404).json({ error: "Note not found" });
   if (note.owner_uid !== req.user.uid)
     return res.status(403).json({ error: "Forbidden" });
-  const { error } = await supabase.from("notes").delete().eq("id", note.id);
+  const { error } = await supabase.from("notes").delete().eq("uuid", id);
   if (error) return res.status(400).json({ error: error.message });
   res.status(204).send();
 });
