@@ -400,7 +400,7 @@ export default function NoteEditor() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="border-b-2 border-black px-4 py-3">
+      <div className="px-4 py-3">
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           <div className="flex items-center">
             <button
