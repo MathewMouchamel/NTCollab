@@ -203,8 +203,11 @@ router.patch("/:id", verifyFirebaseToken, async (req, res) => {
       console.error("Note fetch error:", fetchError);
       return res.status(404).json({ error: "Note not found" });
     }
-    if (note.owner_uid !== req.user.uid)
+    if (!note.public && note.owner_uid !== req.user.uid) {
+      console.log("here");
+      console.log(note.public);
       return res.status(403).json({ error: "Forbidden" });
+    }
 
     const { data, error } = await supabase
       .from("notes")
