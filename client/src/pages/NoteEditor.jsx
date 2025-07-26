@@ -469,7 +469,7 @@ export default function NoteEditor() {
       {/* Title and Tags */}
       <div className="max-w-4xl mx-auto px-4 pt-6 flex flex-col gap-4">
         <input
-          className="text-2xl font-bold border-none border-black outline-none mb-2 bg-white underline underline-offset-4 decoration-4"
+          className="text-2xl font-bold border-none border-black outline-none mb-3 bg-white underline underline-offset-4 decoration-4"
           type="text"
           placeholder="Title"
           value={note.title}
@@ -477,7 +477,7 @@ export default function NoteEditor() {
           maxLength={100}
         />
         {/* Tag input with bubbles */}
-        <div className="flex flex-wrap items-center gap-2 pb-2 mb-2">
+        <div className="flex flex-wrap items-center gap-2 mb-6">
           {/* Existing tags as bubbles */}
           {note.tags.map((tag, index) => (
             <button
@@ -506,7 +506,7 @@ export default function NoteEditor() {
         </div>
       </div>
       {/* Editor */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-4">
         <ReactQuill
           ref={quillRef}
           theme="snow"
