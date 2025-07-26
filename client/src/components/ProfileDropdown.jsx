@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebase';
+import { useState, useRef, useEffect } from "react";
+import { useAuth } from "../AuthContext";
+import { useNavigate } from "react-router-dom";
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase";
 
 export default function ProfileDropdown() {
   const { user, setUser } = useAuth();
@@ -18,9 +18,9 @@ export default function ProfileDropdown() {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -28,9 +28,9 @@ export default function ProfileDropdown() {
     try {
       await signOut(auth);
       setUser(null);
-      navigate('/');
+      navigate("/");
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
   };
 
@@ -47,12 +47,14 @@ export default function ProfileDropdown() {
         {user.avatar ? (
           <img
             src={user.avatar}
-            alt={user.name || 'User'}
+            alt={user.name || "User"}
             className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full bg-gray-200 flex items-center justify-center text-black font-semibold">
-            {user.name ? user.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || 'U'}
+            {user.name
+              ? user.name.charAt(0).toUpperCase()
+              : user.email?.charAt(0).toUpperCase() || "U"}
           </div>
         )}
       </button>
@@ -66,30 +68,30 @@ export default function ProfileDropdown() {
                 {user.avatar ? (
                   <img
                     src={user.avatar}
-                    alt={user.name || 'User'}
+                    alt={user.name || "User"}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center text-black font-semibold text-sm">
-                    {user.name ? user.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || 'U'}
+                    {user.name
+                      ? user.name.charAt(0).toUpperCase()
+                      : user.email?.charAt(0).toUpperCase() || "U"}
                   </div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-black truncate">
-                  {user.name || 'User'}
+                  {user.name || "User"}
                 </p>
-                <p className="text-xs text-gray-600 truncate">
-                  {user.email}
-                </p>
+                <p className="text-xs text-gray-600 truncate">{user.email}</p>
               </div>
             </div>
           </div>
-          
-          <div className="p-2">
+
+          <div className="group p-2 hover:bg-black cursor-pointer">
             <button
               onClick={handleLogout}
-              className="w-full text-left px-3 py-2 text-sm text-black hover:bg-black hover:text-white rounded transition-colors duration-200"
+              className="w-full text-left px-3 py-2 text-sm text-black group-hover:text-white rounded transition-colors duration-200 cursor-pointer"
             >
               Sign Out
             </button>
