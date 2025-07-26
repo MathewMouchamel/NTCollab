@@ -17,7 +17,7 @@ export default function Notes() {
 
   const fetchNotes = useCallback(async () => {
     if (!user?.token) return;
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/notes`, {
         headers: {
@@ -29,7 +29,7 @@ export default function Notes() {
 
         // Filter notes by selected tags and search query
         let filteredNotes = notesData;
-        
+
         // Filter by tags
         if (selectedTags.length > 0) {
           filteredNotes = filteredNotes.filter((note) =>
@@ -38,11 +38,13 @@ export default function Notes() {
             )
           );
         }
-        
+
         // Filter by search query (case-insensitive)
         if (searchQuery.trim()) {
-          filteredNotes = filteredNotes.filter((note) => 
-            note.title && note.title.toLowerCase().includes(searchQuery.toLowerCase())
+          filteredNotes = filteredNotes.filter(
+            (note) =>
+              note.title &&
+              note.title.toLowerCase().includes(searchQuery.toLowerCase())
           );
         }
 
@@ -78,7 +80,7 @@ export default function Notes() {
 
   const handleCreateNewNote = useCallback(async () => {
     if (!user?.token) return;
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/notes/blank`, {
         method: "POST",
@@ -103,7 +105,7 @@ export default function Notes() {
   const handleNoteClick = useCallback(
     async (note) => {
       if (!user?.token) return;
-      
+
       // Use UUID
       const noteId = note.uuid;
 
@@ -201,6 +203,33 @@ export default function Notes() {
               <ProfileDropdown />
             </div>
           </div>
+
+          {/* Search Input */}
+          <div className="mb-6 max-w-4xl mx-auto">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search notes by title..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-black rounded-lg text-black placeholder-gray-500 focus:outline-none focus:border-gray-700 transition-colors duration-200"
+              />
+              <svg
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+          </div>
+
           {/* Tag filter UI */}
           {allTags.length > 0 && (
             <div className="mb-6 flex flex-wrap gap-2 max-w-4xl mx-auto">
@@ -233,32 +262,6 @@ export default function Notes() {
               })}
             </div>
           )}
-
-          {/* Search Input */}
-          <div className="mb-6 max-w-4xl mx-auto">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search notes by title..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-black rounded-lg text-black placeholder-gray-500 focus:outline-none focus:border-gray-700 transition-colors duration-200"
-              />
-              <svg
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-          </div>
 
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center">
