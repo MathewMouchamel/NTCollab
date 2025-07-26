@@ -299,7 +299,7 @@ export default function Notes() {
                 ))}
               </div>
             </div>
-          ) : selectedTags.length === 0 ? (
+          ) : selectedTags.length === 0 && searchQuery.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center">
               {/* Fun black/white SVG (note with a smiley face) */}
               <svg
