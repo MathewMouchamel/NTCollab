@@ -233,7 +233,6 @@ export default function Notes() {
           {/* Tag filter UI */}
           {allTags.length > 0 && (
             <div className="mb-6 flex flex-wrap gap-2 max-w-4xl mx-auto">
-              <span className="font-semibold mr-2">Filter by tags:</span>
               {selectedTags.length > 0 && (
                 <button
                   className="px-3 py-1 rounded-full border-2 border-black bg-red-500 text-white hover:bg-red-400 cursor-pointer"
