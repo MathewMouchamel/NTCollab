@@ -1,4 +1,4 @@
-import React, {
+import {
   useState,
   useEffect,
   useRef,
@@ -18,7 +18,6 @@ import {
 } from "../constants";
 import UnsavedChangesModal from "../components/UnsavedChangesModal";
 import DeleteNoteModal from "../components/DeleteNoteModal";
-import { useCollaborativeEditor } from "../hooks/useCollaborativeEditor";
 
 export default function NoteEditor() {
   const { id: noteUuid } = useParams(); // id is always a UUID
@@ -44,18 +43,6 @@ export default function NoteEditor() {
   const modules = useMemo(() => QUILL_MODULES, []);
   const formats = useMemo(() => QUILL_FORMATS, []);
 
-  // Collaborative editing handler
-  const handleCollaborativeContentChange = useCallback((content) => {
-    // Update local state without triggering auto-save during collaborative changes
-    setNote((prev) => ({ ...prev, content }));
-  }, []);
-
-  // Setup collaborative editing
-  const { provider } = useCollaborativeEditor(
-    noteUuid,
-    quillRef,
-    handleCollaborativeContentChange
-  );
 
   const fetchNote = useCallback(async () => {
     try {
@@ -194,12 +181,10 @@ export default function NoteEditor() {
         content = "";
       }
       setNote((prev) => ({ ...prev, content }));
-      // Only auto-save if we're not in a collaborative session or this is a manual save
-      if (!provider || !provider.wsconnected) {
-        debouncedSave(content);
-      }
+      // Auto-save content changes
+      debouncedSave(content);
     },
-    [debouncedSave, provider]
+    [debouncedSave]
   );
 
   const handleTitleChange = (e) => {
@@ -426,22 +411,6 @@ export default function NoteEditor() {
           <div className="flex items-center space-x-4">
             <div className="text-sm flex items-center space-x-2">
               {getStatusDisplay()}
-              {provider && provider.wsconnected && (
-                <span className="text-green-600 flex items-center">
-                  <svg
-                    className="h-4 w-4 mr-1"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Live
-                </span>
-              )}
             </div>
             {/* Note controls */}
             <div className="flex items-center space-x-2">
