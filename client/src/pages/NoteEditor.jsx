@@ -419,7 +419,7 @@ export default function NoteEditor() {
               {/* Delete Button */}
               <button
                 onClick={handleDeleteConfirm}
-                className="px-3 py-1 text-xs rounded border-2 border-black bg-red-500 text-white hover:bg-red-800 transition-colors duration-200 cursor-pointer"
+                className="px-3 py-1 text-xs rounded-full border-2 border-black bg-red-500 text-white hover:bg-red-800 transition-colors duration-200 cursor-pointer"
                 title="Delete note"
               >
                 Delete
