@@ -410,7 +410,7 @@ export default function NoteEditor() {
               {/* Public/Private Toggle */}
               <button
                 onClick={handlePublicToggle}
-                className={`px-3 py-1 text-xs rounded-full border-2 transition-colors duration-200 bg-black text-white border-black hover:bg-gray-700 cursor-pointer`}
+                className={`px-3 py-1 text-sm rounded-full border-2 transition-colors duration-200 bg-black text-white border-black hover:bg-gray-700 cursor-pointer`}
                 title={note.public ? "Note is public" : "Note is private"}
               >
                 {note.public ? "Public" : "Private"}
@@ -419,7 +419,7 @@ export default function NoteEditor() {
               {/* Delete Button */}
               <button
                 onClick={handleDeleteConfirm}
-                className="px-3 py-1 text-xs rounded-full border-2 border-black bg-red-500 text-white hover:bg-red-800 transition-colors duration-200 cursor-pointer"
+                className="px-3 py-1 text-sm rounded-full border-2 border-black bg-red-500 text-white hover:bg-red-800 transition-colors duration-200 cursor-pointer"
                 title="Delete note"
               >
                 Delete
