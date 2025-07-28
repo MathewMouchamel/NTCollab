@@ -1,10 +1,4 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import ReactQuill from "react-quill";
@@ -42,7 +36,6 @@ export default function NoteEditor() {
   // Memoize Quill configuration to prevent unnecessary re-renders
   const modules = useMemo(() => QUILL_MODULES, []);
   const formats = useMemo(() => QUILL_FORMATS, []);
-
 
   const fetchNote = useCallback(async () => {
     try {
@@ -417,7 +410,7 @@ export default function NoteEditor() {
               {/* Public/Private Toggle */}
               <button
                 onClick={handlePublicToggle}
-                className={`px-3 py-1 text-xs rounded border-2 transition-colors duration-200 bg-black text-white border-black hover:bg-gray-700 cursor-pointer`}
+                className={`px-3 py-1 text-xs rounded-full border-2 transition-colors duration-200 bg-black text-white border-black hover:bg-gray-700 cursor-pointer`}
                 title={note.public ? "Note is public" : "Note is private"}
               >
                 {note.public ? "Public" : "Private"}
