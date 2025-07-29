@@ -9,13 +9,10 @@ Quill.register("modules/cursors", QuillCursors);
 
 const QuillEditor = () => {
   const editorRef = useRef(null);
-  const quillInstanceRef = useRef(null);
   const [isConnected, setIsConnected] = useState(true);
   const providerRef = useRef(null);
 
   useEffect(() => {
-    if (quillInstanceRef.current) return;
-
     const roomname = `codemirror-demo-${new Date().toLocaleDateString(
       "en-CA"
     )}`;
@@ -46,15 +43,12 @@ const QuillEditor = () => {
       theme: "snow",
     });
 
-    quillInstanceRef.current = editor;
-
     const binding = new QuillBinding(ytext, editor, provider.awareness);
 
     // Cleanup on unmount
     return () => {
       binding.destroy();
       provider.destroy();
-      quillInstanceRef.current = null;
     };
   }, []);
 
