@@ -1,3 +1,5 @@
+// Note editor component with rich text editing and auto-save functionality
+// Provides full-featured note editing with tags, title, public/private toggle, and delete
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../AuthContext";
@@ -13,32 +15,53 @@ import {
 import UnsavedChangesModal from "../components/UnsavedChangesModal";
 import DeleteNoteModal from "../components/DeleteNoteModal";
 
+// NOTE: ReactQuill currently uses deprecated findDOMNode internally
+// This generates warnings in React StrictMode but doesn't affect functionality
+// The warnings come from react-quill library, not our code
+
+/**
+ * NoteEditor component - Rich text editor for individual notes
+ * Handles note loading, editing, auto-saving, and various note operations
+ * Supports title editing, tag management, public/private toggle, and deletion
+ */
 export default function NoteEditor() {
+  // Extract note UUID from URL parameters  
   const { id: noteUuid } = useParams(); // id is always a UUID
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  // Main note data state - contains all note information
   const [note, setNote] = useState({
-    title: "",
-    content: "",
-    tags: [],
-    public: false,
+    title: "",      // Note title/headline
+    content: "",    // Rich text content (HTML)
+    tags: [],       // Array of tag strings
+    public: false,  // Public/private visibility flag
   });
+  
+  // UI state management
   const [saveStatus, setSaveStatus] = useState("idle"); // idle, saving, saved, error
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [noteId, setNoteId] = useState(null); // Store the numeric ID for API calls
-  const [tagInput, setTagInput] = useState(""); // For the tag input field
-  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const saveTimeoutRef = useRef(null);
-  const quillRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);     // Loading state during note fetch
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false); // Track unsaved changes
+  const [noteId, setNoteId] = useState(null);          // Store the UUID for API calls
+  const [tagInput, setTagInput] = useState("");         // For the tag input field
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false); // Show unsaved changes modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);   // Show delete confirmation modal
+  
+  // Refs for managing timers and component references
+  const saveTimeoutRef = useRef(null);  // Debounced save timeout
+  const quillRef = useRef(null);        // Reference to ReactQuill component
 
   // Memoize Quill configuration to prevent unnecessary re-renders
   const modules = useMemo(() => QUILL_MODULES, []);
   const formats = useMemo(() => QUILL_FORMATS, []);
 
+  /**
+   * Fetches note data from the API using the note UUID
+   * Updates note state and handles loading/error states
+   */
   const fetchNote = useCallback(async () => {
     try {
+      // Make authenticated request to fetch note by UUID
       const response = await fetch(`${API_BASE_URL}/notes/${noteUuid}`, {
         headers: {
           Authorization: `Bearer ${user.token}`,
@@ -47,35 +70,47 @@ export default function NoteEditor() {
 
       if (response.ok) {
         const noteData = await response.json();
+        // Update note state with fetched data
         setNote(noteData);
-        // Store the numeric ID for API operations
+        // Store the UUID for subsequent API operations
         setNoteId(noteData.uuid);
       } else {
         console.error("Failed to fetch note");
+        // Redirect to notes list if note cannot be fetched
         navigate("/notes");
       }
     } catch (error) {
       console.error("Error fetching note:", error);
+      // Redirect to notes list on network errors
       navigate("/notes");
     } finally {
+      // Always set loading to false, regardless of success/failure
       setIsLoading(false);
     }
   }, [noteUuid, user, navigate]);
 
+  /**
+   * Saves note data to the API with either PATCH (partial) or PUT (full) update
+   * @param {Object} noteToSave - Note data to save
+   * @param {boolean} isPartialUpdate - Whether to use PATCH (true) or PUT (false)
+   */
   const saveNote = useCallback(
     async (noteToSave, isPartialUpdate = false) => {
-      // Don't save if we don't have the noteId yet
+      // Don't save if we don't have the noteId yet (note not loaded)
       if (!noteId) {
         console.log("Note not loaded yet, skipping save");
         return;
       }
 
+      // Update UI to show saving status
       setSaveStatus("saving");
       try {
-        // Always use the numeric ID for updates since all notes are existing
+        // Use UUID for API endpoint (all notes are existing with UUIDs)
         const url = `${API_BASE_URL}/notes/${noteId}`;
+        // Choose HTTP method: PATCH for partial updates, PUT for full updates
         const method = isPartialUpdate ? "PATCH" : "PUT";
 
+        // Make authenticated request to save note
         const response = await fetch(url, {
           method,
           headers: {
@@ -87,13 +122,15 @@ export default function NoteEditor() {
 
         if (response.ok) {
           const savedNote = await response.json();
+          // Update local state with saved note data
           setNote(savedNote);
           setSaveStatus("saved");
           setHasUnsavedChanges(false);
 
-          // Clear saved status after 2 seconds
+          // Clear saved status after 2 seconds to show temporary feedback
           setTimeout(() => setSaveStatus("idle"), 2000);
         } else {
+          // Handle save errors
           setSaveStatus("error");
           setTimeout(() => setSaveStatus("idle"), 3000);
         }

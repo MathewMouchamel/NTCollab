@@ -1,9 +1,13 @@
+// Firebase Admin SDK configuration
+// Handles initialization with either service account file or environment variables
 import admin from "firebase-admin";
 import fs from "fs";
 
+// Service account configuration and initialization status
 let serviceAccount;
 let firebaseInitialized = false;
 
+// First, try to load Firebase configuration from service account JSON file
 try {
   serviceAccount = JSON.parse(
     fs.readFileSync("./serviceAccountKey.json", "utf8")
@@ -12,7 +16,7 @@ try {
 } catch (error) {
   console.warn("Warning: serviceAccountKey.json not found. Checking environment variables for Firebase admin.");
   
-  // Check if all required environment variables are present
+  // Define required environment variables for Firebase admin
   const requiredEnvVars = [
     'FIREBASE_PROJECT_ID',
     'FIREBASE_PRIVATE_KEY_ID', 
@@ -21,6 +25,7 @@ try {
     'FIREBASE_CLIENT_ID'
   ];
   
+  // Check which required environment variables are missing
   const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
   
   if (missingVars.length > 0) {
@@ -28,11 +33,12 @@ try {
     console.error("Firebase Admin SDK will not be initialized. Authentication may not work properly.");
     console.error("Please configure either serviceAccountKey.json or the required environment variables.");
   } else {
-    // Fallback to environment variables
+    // Fallback: create service account object from environment variables
     serviceAccount = {
       type: "service_account",
       project_id: process.env.FIREBASE_PROJECT_ID,
       private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+      // Replace escaped newlines in private key with actual newlines
       private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
       client_email: process.env.FIREBASE_CLIENT_EMAIL,
       client_id: process.env.FIREBASE_CLIENT_ID,
@@ -45,6 +51,7 @@ try {
   }
 }
 
+// Initialize Firebase Admin SDK if configuration is available and not already initialized
 if (serviceAccount && !admin.apps.length) {
   try {
     admin.initializeApp({
@@ -58,4 +65,5 @@ if (serviceAccount && !admin.apps.length) {
   }
 }
 
+// Export Firebase Admin SDK instance for use in other modules
 export default admin;

@@ -1,3 +1,5 @@
+// Express.js API server for note-taking application
+// Provides CRUD operations for notes with Firebase authentication
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -5,21 +7,29 @@ import { createServer } from "http";
 import { verifyFirebaseToken } from "./verifyFirebaseToken.js";
 import supabase from "./supabaseClient.js";
 
+// Load environment variables from .env file
 dotenv.config();
 
+// Create Express application instance
 const app = express();
 const PORT = process.env.PORT;
 
+// Configure CORS to allow requests from React development server
 app.use(cors({ origin: "http://localhost:5173" }));
+// Parse JSON request bodies
 app.use(express.json());
 
 // --- /api/notes endpoints ---
+// Express router to group all note-related API endpoints
 const router = express.Router();
 
 // POST /api/notes (create note)
+// Creates a new note with provided content, tags, and metadata
 router.post("/", verifyFirebaseToken, async (req, res) => {
   try {
+    // Extract note data from request body, rename 'public' to avoid JS reserved word
     const { content, tags, public: isPublic, title } = req.body;
+    // Get user ID from Firebase token (set by verifyFirebaseToken middleware)
     const owner_uid = req.user.uid;
 
     // Validate required fields
@@ -27,23 +37,28 @@ router.post("/", verifyFirebaseToken, async (req, res) => {
       return res.status(400).json({ error: "Content is required" });
     }
 
+    // Insert new note into Supabase database
     const { data, error } = await supabase
       .from("notes")
       .insert([
         {
-          content: content || "",
-          tags: tags || [],
-          public: isPublic || false,
-          owner_uid,
-          title: title || "",
+          content: content || "", // Default to empty string if no content
+          tags: tags || [],       // Default to empty array if no tags
+          public: isPublic || false, // Default to private if not specified
+          owner_uid,              // Associate note with authenticated user
+          title: title || "",     // Default to empty string if no title
         },
       ])
-      .select()
-      .single();
+      .select()  // Return the created note data
+      .single(); // Expect only one result
+
+    // Handle database errors
     if (error) {
       console.error("Supabase error:", error);
       return res.status(400).json({ error: error.message });
     }
+    
+    // Return created note with 201 status
     res.status(201).json(data);
   } catch (error) {
     console.error("Server error:", error);
@@ -52,27 +67,35 @@ router.post("/", verifyFirebaseToken, async (req, res) => {
 });
 
 // POST /api/notes/blank (create blank note)
+// Creates an empty note in the database for immediate editing
+// Used when user clicks "Create New Note" to get a UUID immediately
 router.post("/blank", verifyFirebaseToken, async (req, res) => {
   try {
+    // Get user ID from Firebase token
     const owner_uid = req.user.uid;
 
+    // Insert a completely blank note with default values
     const { data, error } = await supabase
       .from("notes")
       .insert([
         {
-          content: "",
-          tags: [],
-          public: false,
-          owner_uid,
-          title: "",
+          content: "",        // Empty content
+          tags: [],          // No tags
+          public: false,     // Private by default
+          owner_uid,         // Associate with authenticated user
+          title: "",         // Empty title
         },
       ])
-      .select()
-      .single();
+      .select()  // Return the created note (includes auto-generated UUID)
+      .single(); // Expect only one result
+
+    // Handle database errors
     if (error) {
       console.error("Supabase error:", error);
       return res.status(400).json({ error: error.message });
     }
+    
+    // Return the blank note with its UUID for navigation
     res.status(201).json(data);
   } catch (error) {
     console.error("Server error:", error);
