@@ -3,6 +3,9 @@ import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { QuillBinding } from "y-quill";
 import Quill from "quill";
+import QuillCursors from "quill-cursors";
+
+Quill.register("modules/cursors", QuillCursors);
 
 const QuillEditor = ({ noteUuid }) => {
   const editorRef = useRef(null);
@@ -26,6 +29,7 @@ const QuillEditor = ({ noteUuid }) => {
 
     const editor = new Quill(editorRef.current, {
       modules: {
+        cursors: true,
         toolbar: [
           [{ header: [1, 2, false] }],
           ["bold", "italic", "underline"],
