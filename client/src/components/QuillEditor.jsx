@@ -57,7 +57,7 @@ const QuillEditor = () => {
 
   return (
     <div>
-      <div ref={editorRef} id="editor" style={{ minHeight: "500px" }} />
+      <div ref={editorRef} id="editor" style={{ minHeight: "400px" }} />
     </div>
   );
 };
