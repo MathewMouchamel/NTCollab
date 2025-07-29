@@ -3,21 +3,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../AuthContext";
-import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "../styles/quill-custom.css";
-import {
-  API_BASE_URL,
-  AUTO_SAVE_DELAY,
-  QUILL_MODULES,
-  QUILL_FORMATS,
-} from "../constants";
+import { API_BASE_URL, AUTO_SAVE_DELAY } from "../constants";
 import UnsavedChangesModal from "../components/UnsavedChangesModal";
 import DeleteNoteModal from "../components/DeleteNoteModal";
-
-// NOTE: ReactQuill currently uses deprecated findDOMNode internally
-// This generates warnings in React StrictMode but doesn't affect functionality
-// The warnings come from react-quill library, not our code
+import QuillEditor from "../components/QuillEditor";
 
 /**
  * NoteEditor component - Rich text editor for individual notes
@@ -25,35 +16,30 @@ import DeleteNoteModal from "../components/DeleteNoteModal";
  * Supports title editing, tag management, public/private toggle, and deletion
  */
 export default function NoteEditor() {
-  // Extract note UUID from URL parameters  
+  // Extract note UUID from URL parameters
   const { id: noteUuid } = useParams(); // id is always a UUID
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   // Main note data state - contains all note information
   const [note, setNote] = useState({
-    title: "",      // Note title/headline
-    content: "",    // Rich text content (HTML)
-    tags: [],       // Array of tag strings
-    public: false,  // Public/private visibility flag
+    title: "", // Note title/headline
+    content: "", // Rich text content (HTML)
+    tags: [], // Array of tag strings
+    public: false, // Public/private visibility flag
   });
-  
+
   // UI state management
   const [saveStatus, setSaveStatus] = useState("idle"); // idle, saving, saved, error
-  const [isLoading, setIsLoading] = useState(true);     // Loading state during note fetch
+  const [isLoading, setIsLoading] = useState(true); // Loading state during note fetch
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false); // Track unsaved changes
-  const [noteId, setNoteId] = useState(null);          // Store the UUID for API calls
-  const [tagInput, setTagInput] = useState("");         // For the tag input field
+  const [noteId, setNoteId] = useState(null); // Store the UUID for API calls
+  const [tagInput, setTagInput] = useState(""); // For the tag input field
   const [showUnsavedModal, setShowUnsavedModal] = useState(false); // Show unsaved changes modal
-  const [showDeleteModal, setShowDeleteModal] = useState(false);   // Show delete confirmation modal
-  
-  // Refs for managing timers and component references
-  const saveTimeoutRef = useRef(null);  // Debounced save timeout
-  const quillRef = useRef(null);        // Reference to ReactQuill component
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // Show delete confirmation modal
 
-  // Memoize Quill configuration to prevent unnecessary re-renders
-  const modules = useMemo(() => QUILL_MODULES, []);
-  const formats = useMemo(() => QUILL_FORMATS, []);
+  // Refs for managing timers and component references
+  const saveTimeoutRef = useRef(null); // Debounced save timeout
 
   /**
    * Fetches note data from the API using the note UUID
@@ -506,15 +492,7 @@ export default function NoteEditor() {
       </div>
       {/* Editor */}
       <div className="max-w-4xl mx-auto px-4">
-        <ReactQuill
-          ref={quillRef}
-          theme="snow"
-          value={note.content}
-          onChange={handleContentChange}
-          modules={modules}
-          formats={formats}
-          placeholder="Start writing your note..."
-        />
+        <QuillEditor />
       </div>
 
       {/* Unsaved Changes Modal */}

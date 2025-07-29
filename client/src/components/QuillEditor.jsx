@@ -9,10 +9,13 @@ Quill.register("modules/cursors", QuillCursors);
 
 const QuillEditor = () => {
   const editorRef = useRef(null);
+  const quillInstanceRef = useRef(null);
   const [isConnected, setIsConnected] = useState(true);
   const providerRef = useRef(null);
 
   useEffect(() => {
+    if (quillInstanceRef.current) return;
+
     const roomname = `codemirror-demo-${new Date().toLocaleDateString(
       "en-CA"
     )}`;
@@ -43,42 +46,20 @@ const QuillEditor = () => {
       theme: "snow",
     });
 
+    quillInstanceRef.current = editor;
+
     const binding = new QuillBinding(ytext, editor, provider.awareness);
 
     // Cleanup on unmount
     return () => {
       binding.destroy();
       provider.destroy();
+      quillInstanceRef.current = null;
     };
   }, []);
 
-  const handleConnectionToggle = () => {
-    if (providerRef.current) {
-      if (providerRef.current.shouldConnect) {
-        providerRef.current.disconnect();
-        setIsConnected(false);
-      } else {
-        providerRef.current.connect();
-        setIsConnected(true);
-      }
-    }
-  };
-
   return (
     <div>
-      <button type="button" onClick={handleConnectionToggle}>
-        {isConnected ? "Disconnect" : "Connect"}
-      </button>
-      <p></p>
-      <p>
-        This is a demo of the <a href="https://github.com/yjs/yjs">Yjs</a> ⇔{" "}
-        <a href="https://quilljs.com/">Quill</a> binding:{" "}
-        <a href="https://github.com/yjs/y-quill">y-quill</a>.
-      </p>
-      <p>
-        The content of this editor is shared with every client that visits this
-        domain.
-      </p>
       <div ref={editorRef} id="editor" style={{ minHeight: "500px" }} />
     </div>
   );
