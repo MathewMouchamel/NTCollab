@@ -492,7 +492,7 @@ export default function NoteEditor() {
       </div>
       {/* Editor */}
       <div className="max-w-4xl mx-auto px-4">
-        <QuillEditor />
+        <QuillEditor noteUuid={noteUuid} />
       </div>
 
       {/* Unsaved Changes Modal */}

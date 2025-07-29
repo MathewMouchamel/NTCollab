@@ -4,19 +4,17 @@ import { WebsocketProvider } from "y-websocket";
 import { QuillBinding } from "y-quill";
 import Quill from "quill";
 
-const QuillEditor = () => {
+const QuillEditor = ({ noteUuid }) => {
   const editorRef = useRef(null);
   const quillInstanceRef = useRef(null);
   const bindingRef = useRef(null);
   const providerRef = useRef(null);
 
   useEffect(() => {
-    // Only initialize if not already done
-    if (!editorRef.current || quillInstanceRef.current) return;
+    // Only initialize if not already done and we have a noteUuid
+    if (!editorRef.current || quillInstanceRef.current || !noteUuid) return;
 
-    const roomname = `codemirror-demo-${new Date().toLocaleDateString(
-      "en-CA"
-    )}`;
+    const roomname = `note-${noteUuid}`;
     const ydoc = new Y.Doc();
     const provider = new WebsocketProvider(
       "wss://demos.yjs.dev/ws",
@@ -53,7 +51,7 @@ const QuillEditor = () => {
       bindingRef.current = null;
       providerRef.current = null;
     };
-  }, []);
+  }, [noteUuid]);
 
   return (
     <div>
