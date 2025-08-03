@@ -1,5 +1,5 @@
 // API Configuration
-export const API_BASE_URL = "http://localhost:3000/api";
+export const API_BASE_URL = "http://34.136.73.146/api";
 
 // Auto-save configuration
 export const AUTO_SAVE_DELAY = 1000; // milliseconds
